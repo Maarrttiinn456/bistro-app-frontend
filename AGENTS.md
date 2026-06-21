@@ -1,55 +1,98 @@
-# Bistro app — frontend
+# Bistro frontend - AGENTS.md
 
-Expo SDK 54 + React Native + Expo Router + TypeScript.
+Expo + React Native aplikace pro bistro appku.
 
-## Jazyk
+Tenhle soubor ma byt jednoducha mapa projektu. Projekt si chci stavet sam s pomoci agenta, ne aby agent generoval celou architekturu dopredu.
 
-- Komunikuj s uživatelem česky, pokud uživatel výslovně nepožádá o jiný jazyk.
-- Projektové poznámky, komentáře a dokumentaci piš česky, pokud nejde o technické názvy, API kontrakty nebo převzatý text.
+## Jak nad projektem premyslet
 
-## Pracovní pravidla
+- `app/` = stranky, layouty a navigace.
+- `src/` = pomocny kod mimo stranky, az kdyz zacne byt potreba.
+- `assets/` = obrazky a staticke soubory.
 
-- Před psaním Expo kódu čti přesnou verzovanou dokumentaci: https://docs.expo.dev/versions/v54.0.0/.
-- Dělej pouze to, co uživatel explicitně zadal.
-- Neměň architekturu projektu bez potvrzení.
-- Nepřidávej zbytečné abstrakce, dokud není reálná potřeba nebo opakované použití.
-- Pokud je rozpor mezi Notionem a backend repem, vyšší váhu má backend repo `Maarrttiinn456/bistro-app-backend`.
+Jinak receno:
 
-## Architektonická pravidla
+- Kdyz resis obrazovku nebo route, zacni v `app/`.
+- Kdyz resis data, API nebo sdilenou logiku, zacni v `src/`.
+- Kdyz neco neni potreba sdilet, nech to co nejbliz u obrazovky.
 
-@.agents/rules/architecture.md
+## Technologie
 
-## API pravidla
+- Expo SDK 54
+- React Native
+- Expo Router
+- TypeScript
+- TanStack Query pro loading/cache/error stav kolem dat
+- Orval pro generovani API klienta a typu z OpenAPI
+- Fastify backend jako jediny server, ktery frontend vola
 
-@.agents/rules/api.md
+## Nejdulezitejsi pravidla
 
-## Auth pravidla
+- Komunikuj cesky, pokud uzivatel nepise anglicky.
+- Delej jen to, co uzivatel zadal.
+- U vetsich zmen nejdriv napis kratky plan.
+- Nemen architekturu bez potvrzeni.
+- Nezakladej slozky dopredu.
+- Vysvetluj jednoduse, proc neco patri do dane slozky.
+- Pomahas po malych krocich. Negeneruj celou appku, pokud o to vyslovne nepozadam.
+- Frontend nikdy nevola Supabase primo.
+- Nevratne akce, napr. delete, force push, send nebo publish, vyzaduji explicitni potvrzeni.
 
-@.agents/rules/auth.md
+## Backend, API a typy
 
-## Struktura projektu
-
-@.agents/rules/project-structure.md
-
-## Feature docs
-
-Před prací na konkrétní feature si přečti relevantní soubor v `.agents/docs/`.
-Soubory se nenačítají automaticky — vyžádej si ten relevantní podle domény.
-
-## Dev příkazy
-
-```bash
-npm run start    # Expo dev server
-npm run android  # Android build/run
-npm run ios      # iOS build/run
-npm run web      # Expo web
-npm run lint     # lint kontrola
-```
-
-## .agents složka
+Pravda o backendu je v backend repu:
 
 ```text
-.agents/
-  docs/   # kontextové a feature dokumenty
-  rules/  # pravidla, která root AGENTS.md odkazuje
+Maarrttiinn456/bistro-app-backend
+```
+
+Pravda o API ma jit z backend OpenAPI vystupu.
+
+Zjednoduseny tok:
+
+```text
+backend schema
+  -> OpenAPI JSON
+  -> Orval
+  -> generovane typy a fetch funkce
+  -> funkce/hooky pro fetch dat
+  -> obrazovky nebo pomocna logika
+```
+
+Pravidla:
+
+- API typy nepis rucne, pokud je umi dodat OpenAPI/Orval.
+- Fetch funkce pro endpointy nepis rucne, pokud je umi vygenerovat Orval.
+- Generovany kod rucne neupravuj.
+- Rucni fetch zaklad pridej az ve chvili, kdy je jasne, ze ho Orval potrebuje.
+- Base URL backendu muze byt v `EXPO_PUBLIC_API_URL`.
+- Lokalni backend typicky bezi na `http://localhost:3000`.
+- Orval config pridej nebo men az po potvrzeni konkretniho codegen flow.
+
+## Kde co hledat
+
+```text
+app/
+  _layout.tsx              # root layout a navigace
+  index.tsx                # uvodni route
+
+src/                       # zatim nemusi existovat; zaloz az kdyz je potreba
+```
+
+## Styl kodu
+
+- Pouzivej TypeScript.
+- Funkce pis jako arrow functions: `const fn = () => {}`.
+- Pouzivej `async/await`, ne `.then()` retezce.
+- Preferuj `const`; `let` jen kdyz je potreba reassignment; `var` nikdy.
+- Komentare pis jen tam, kde kod sam nevysvetluje zamer.
+
+## Dev prikazy
+
+```bash
+npm run start
+npm run android
+npm run ios
+npm run web
+npm run lint
 ```
