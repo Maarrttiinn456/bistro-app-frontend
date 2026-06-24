@@ -1,78 +1,76 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {
-    Icon,
-    Label,
-    NativeTabs,
-    VectorIcon,
-} from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
 
-export default function TabLayout() {
+const TabLayout = () => {
     return (
-        <NativeTabs>
-            <NativeTabs.Trigger name="index">
-                <Label>Dnes</Label>
-                <Icon
-                    sf="house.fill"
-                    androidSrc={
-                        <VectorIcon
-                            family={MaterialCommunityIcons}
+        <Tabs screenOptions={{ headerShown: false }}>
+            <Tabs.Screen
+                name="index"
+                options={{
+                    title: 'Dnes',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
                             name="home"
+                            size={size}
                         />
-                    }
-                />
-            </NativeTabs.Trigger>
-
-            <NativeTabs.Trigger name="recipes">
-                <Label>Recepty</Label>
-                <Icon
-                    sf="book.fill"
-                    androidSrc={
-                        <VectorIcon
-                            family={MaterialCommunityIcons}
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="recipes"
+                options={{
+                    title: 'Recepty',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
                             name="book-open-variant"
+                            size={size}
                         />
-                    }
-                />
-            </NativeTabs.Trigger>
-
-            <NativeTabs.Trigger name="meal-plan">
-                <Label>Plán</Label>
-                <Icon
-                    sf="calendar"
-                    androidSrc={
-                        <VectorIcon
-                            family={MaterialCommunityIcons}
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="meal-plan"
+                options={{
+                    title: 'Plán',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
                             name="calendar-month"
+                            size={size}
                         />
-                    }
-                />
-            </NativeTabs.Trigger>
-
-            <NativeTabs.Trigger name="food-log">
-                <Label>Deník</Label>
-                <Icon
-                    sf="list.bullet"
-                    androidSrc={
-                        <VectorIcon
-                            family={MaterialCommunityIcons}
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="food-log"
+                options={{
+                    title: 'Deník',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
                             name="notebook"
+                            size={size}
                         />
-                    }
-                />
-            </NativeTabs.Trigger>
-
-            <NativeTabs.Trigger name="profile">
-                <Label>Profil</Label>
-                <Icon
-                    sf="person.crop.circle"
-                    androidSrc={
-                        <VectorIcon
-                            family={MaterialCommunityIcons}
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    title: 'Profil',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
                             name="account-circle"
+                            size={size}
                         />
-                    }
-                />
-            </NativeTabs.Trigger>
-        </NativeTabs>
+                    ),
+                }}
+            />
+        </Tabs>
     );
-}
+};
+
+export default TabLayout;
