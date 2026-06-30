@@ -17,6 +17,10 @@ const RecipesLayout = () => {
         >
             <Stack.Screen name="index" options={{ title: 'Recepty' }} />
             <Stack.Screen name="[recipeId]" options={{ title: 'Recept' }} />
+            <Stack.Screen
+                name="[recipeId]/edit"
+                options={{ title: 'Upravit recept' }}
+            />
         </Stack>
     );
 };

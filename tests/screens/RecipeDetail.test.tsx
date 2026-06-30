@@ -1,16 +1,24 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 
+import RecipeEditScreen from '@/app/(tabs)/recipes/[recipeId]/edit';
 import RecipeDetailScreen from '@/app/(tabs)/recipes/[recipeId]';
 import type { RecipeDetail } from '@/src/api/generated/model';
 import { MealSlot } from '@/src/api/generated/model';
 import { useGetRecipe } from '@/src/api/generated/recipes/recipes';
 
+const mockPush = jest.fn();
+
 jest.mock('expo-router', () => ({
     useLocalSearchParams: () => ({
         recipeId: 'recipe-1',
     }),
+    useRouter: () => ({
+        push: mockPush,
+    }),
 }));
+
+jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
 jest.mock('@/src/api/generated/recipes/recipes', () => ({
     useGetRecipe: jest.fn(),
@@ -140,5 +148,44 @@ describe('RecipeDetailScreen', () => {
         expect(
             screen.getByText('Postup zatím není vyplněný.'),
         ).toBeOnTheScreen();
+    });
+
+    it('opens recipe actions from the floating action button', async () => {
+        const user = userEvent.setup();
+        mockRecipeQuery({ data: { recipe: recipeDetail } });
+
+        await render(<RecipeDetailScreen />);
+        await user.press(screen.getByRole('button', { name: 'Akce receptu' }));
+
+        expect(
+            screen.getByRole('button', { name: /Upravit recept/ }),
+        ).toBeOnTheScreen();
+        expect(
+            screen.getByRole('button', { name: /Smazat recept/ }),
+        ).toBeOnTheScreen();
+    });
+
+    it('opens the recipe edit placeholder from recipe actions', async () => {
+        const user = userEvent.setup();
+        mockRecipeQuery({ data: { recipe: recipeDetail } });
+
+        await render(<RecipeDetailScreen />);
+        await user.press(screen.getByRole('button', { name: 'Akce receptu' }));
+        await user.press(
+            screen.getByRole('button', { name: /Upravit recept/ }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/recipes/[recipeId]/edit',
+            params: { recipeId: 'recipe-1' },
+        });
+    });
+});
+
+describe('RecipeEditScreen', () => {
+    it('shows the recipe edit placeholder', async () => {
+        await render(<RecipeEditScreen />);
+
+        expect(screen.getByText('Upravit recept')).toBeOnTheScreen();
     });
 });

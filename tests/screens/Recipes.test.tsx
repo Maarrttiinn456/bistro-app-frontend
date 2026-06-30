@@ -14,6 +14,8 @@ jest.mock('expo-router', () => ({
     }),
 }));
 
+jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
+
 jest.mock('@/src/api/generated/recipes/recipes', () => ({
     useGetRecipes: jest.fn(),
 }));
@@ -105,5 +107,47 @@ describe('Recipes', () => {
             pathname: '/recipes/[recipeId]',
             params: { recipeId: 'recipe-1' },
         });
+    });
+
+    it('shows the add recipe floating action button', async () => {
+        mockRecipesQuery({ data: { recipes: [recipe] } });
+
+        await render(<Recipes />);
+
+        expect(
+            screen.getByRole('button', { name: 'Přidat recept' }),
+        ).toBeOnTheScreen();
+    });
+
+    it('opens add recipe options from the floating action button', async () => {
+        const user = userEvent.setup();
+        mockRecipesQuery({ data: { recipes: [recipe] } });
+
+        await render(<Recipes />);
+        await user.press(
+            screen.getByRole('button', { name: 'Přidat recept' }),
+        );
+
+        expect(
+            screen.getByRole('button', { name: /Ručně/ }),
+        ).toBeOnTheScreen();
+        expect(
+            screen.getByRole('button', { name: /Import z URL/ }),
+        ).toBeOnTheScreen();
+        expect(screen.getByText('Připravujeme')).toBeOnTheScreen();
+    });
+
+    it('closes add recipe options when manual add is pressed', async () => {
+        const user = userEvent.setup();
+        mockRecipesQuery({ data: { recipes: [recipe] } });
+
+        await render(<Recipes />);
+        await user.press(
+            screen.getByRole('button', { name: 'Přidat recept' }),
+        );
+        await user.press(screen.getByRole('button', { name: /Ručně/ }));
+
+        expect(screen.queryByText('Ručně')).not.toBeOnTheScreen();
+        expect(screen.queryByText('Import z URL')).not.toBeOnTheScreen();
     });
 });

@@ -1,6 +1,7 @@
 import type { Recipe } from '@/src/api/generated/model';
 import { useGetRecipes } from '@/src/api/generated/recipes/recipes';
 import { Screen } from '@/src/components/Screen';
+import { RecipeAddActionMenu } from '@/src/recipes/RecipeAddActionMenu';
 import { formatMealTypes } from '@/src/recipes/recipeFormatters';
 import { useRouter } from 'expo-router';
 import {
@@ -87,12 +88,11 @@ const Recipes = () => {
                     </Text>
                 }
                 renderItem={({ item }) => (
-                    <RecipeListItem
-                        recipe={item}
-                        onPress={handleRecipePress}
-                    />
+                    <RecipeListItem recipe={item} onPress={handleRecipePress} />
                 )}
+                showsVerticalScrollIndicator={false}
             />
+            <RecipeAddActionMenu />
         </Screen>
     );
 };
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         gap: 12,
-        paddingBottom: 16,
+        paddingBottom: 96,
     },
     recipeItem: {
         borderColor: '#d0d5dd',

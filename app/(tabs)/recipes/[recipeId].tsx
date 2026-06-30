@@ -1,6 +1,7 @@
 import { type Macro } from '@/src/api/generated/model';
 import { useGetRecipe } from '@/src/api/generated/recipes/recipes';
 import { Screen } from '@/src/components/Screen';
+import { RecipeDetailActionMenu } from '@/src/recipes/RecipeDetailActionMenu';
 import {
     formatIngredientAmount,
     formatMacroValue,
@@ -70,7 +71,10 @@ const RecipeDetailScreen = () => {
 
     return (
         <Screen>
-            <ScrollView contentContainerStyle={styles.content}>
+            <ScrollView
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+            >
                 <View style={styles.hero}>
                     <Text style={styles.title}>{recipe.name}</Text>
                     <Text style={styles.meta}>
@@ -137,6 +141,7 @@ const RecipeDetailScreen = () => {
                     )}
                 </View>
             </ScrollView>
+            <RecipeDetailActionMenu recipeId={recipe.id} />
         </Screen>
     );
 };
@@ -144,7 +149,7 @@ const RecipeDetailScreen = () => {
 const styles = StyleSheet.create({
     content: {
         gap: 20,
-        paddingBottom: 24,
+        paddingBottom: 128,
     },
     errorText: {
         color: '#b42318',
