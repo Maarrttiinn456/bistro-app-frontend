@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 
@@ -133,10 +134,25 @@ const AuthStateProbe = () => {
 };
 
 const renderAuthProvider = () => {
+    const testQueryClient = new QueryClient({
+        defaultOptions: {
+            mutations: {
+                gcTime: Infinity,
+                retry: false,
+            },
+            queries: {
+                gcTime: Infinity,
+                retry: false,
+            },
+        },
+    });
+
     return render(
-        <AuthProvider>
-            <AuthStateProbe />
-        </AuthProvider>,
+        <QueryClientProvider client={testQueryClient}>
+            <AuthProvider>
+                <AuthStateProbe />
+            </AuthProvider>
+        </QueryClientProvider>,
     );
 };
 

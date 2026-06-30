@@ -1,11 +1,10 @@
 import {
     createContext,
-    type Dispatch,
     type ReactNode,
-    type SetStateAction,
     useEffect,
     useState,
 } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
     getMe,
@@ -17,14 +16,12 @@ import type {
     AuthContext as BackendAuthContext,
     LoginBody,
     Profile,
-    Session,
     SignUpBody,
 } from '@/src/api/generated/model';
 import { clearSession, getSession, saveSession } from '@/src/auth/authStorage';
 
 type AuthContextValue = {
     isAuthenticated: boolean;
-    setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
     profile: Profile | null;
     isRestoringSession: boolean;
     login: (credentials: LoginBody) => Promise<void>;
@@ -50,213 +47,146 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 );
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const queryClient = useQueryClient();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [isRestoringSession, setIsRestoringSession] = useState(true);
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
-    const [loginError, setLoginError] = useState<Error | null>(null);
-    const [isLoggingInWithDevToken, setIsLoggingInWithDevToken] =
-        useState(false);
-    const [devLoginError, setDevLoginError] = useState<Error | null>(null);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [registerError, setRegisterError] = useState<Error | null>(null);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [logoutError, setLogoutError] = useState<Error | null>(null);
 
-    const applyUserContext = (authContext: BackendAuthContext) => {
-        setProfile(authContext.profile);
-        setIsAuthenticated(true);
+    const isAuthenticated = profile !== null;
+
+    const resetAuthState = () => {
+        setProfile(null);
     };
 
     const saveAuthContext = async (authContext: BackendAuthContext) => {
-        if (authContext.session.accessToken === null) {
+        if (!authContext.session.accessToken) {
             throw new Error('Auth response does not contain an access token');
         }
 
         await saveSession(authContext.session);
-        applyUserContext(authContext);
+        setProfile(authContext.profile);
     };
 
     useEffect(() => {
-        let isMounted = true;
-
         const restoreSession = async () => {
             try {
                 const session = await getSession();
 
-                if (session?.accessToken === null || !session?.accessToken) {
+                if (!session?.accessToken) {
                     return;
                 }
 
                 const authContext = await getMe();
 
-                if (isMounted) {
-                    applyUserContext(authContext);
-                }
+                setProfile(authContext.profile);
             } catch {
                 await clearSession();
-
-                if (isMounted) {
-                    setProfile(null);
-                    setIsAuthenticated(false);
-                }
+                resetAuthState();
             } finally {
-                if (isMounted) {
-                    setIsRestoringSession(false);
-                }
+                setIsRestoringSession(false);
             }
         };
 
         void restoreSession();
-
-        return () => {
-            isMounted = false;
-        };
     }, []);
-
-    const createDevSession = (accessToken: string): Session => ({
-        accessToken,
-        expiresIn: null,
-        refreshToken: null,
-        tokenType: 'bearer',
-    });
 
     const getDevAuthToken = () => {
         return process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN?.trim() ?? '';
     };
 
-    const login = async (credentials: LoginBody) => {
-        setLoginError(null);
-        setIsLoggingIn(true);
-
-        try {
+    const loginMutation = useMutation<void, Error, LoginBody>({
+        mutationFn: async (credentials) => {
             const authContext = await loginRequest(credentials);
 
             await saveAuthContext(authContext);
-        } catch (error) {
-            const loginFailure =
-                error instanceof Error
-                    ? error
-                    : new Error('Login failed unexpectedly');
+        },
+        onError: resetAuthState,
+    });
 
-            setProfile(null);
-            setIsAuthenticated(false);
-            setLoginError(loginFailure);
+    const devLoginMutation = useMutation<void, Error>({
+        mutationFn: async () => {
+            const devAuthToken = getDevAuthToken();
 
-            throw loginFailure;
-        } finally {
-            setIsLoggingIn(false);
-        }
-    };
-
-    const loginWithDevToken = async () => {
-        setDevLoginError(null);
-        setIsLoggingInWithDevToken(true);
-
-        const devAuthToken = getDevAuthToken();
-
-        try {
             if (!devAuthToken) {
                 throw new Error('Dev auth token is not configured');
             }
 
-            await saveSession(createDevSession(devAuthToken));
+            await saveSession({
+                accessToken: devAuthToken,
+                expiresIn: null,
+                refreshToken: null,
+                tokenType: 'bearer',
+            });
 
             const authContext = await getMe();
 
-            applyUserContext(authContext);
-        } catch (error) {
+            setProfile(authContext.profile);
+        },
+        onError: async () => {
             await clearSession();
+            resetAuthState();
+        },
+    });
 
-            const devLoginFailure =
-                error instanceof Error
-                    ? error
-                    : new Error('Dev login failed unexpectedly');
-
-            setProfile(null);
-            setIsAuthenticated(false);
-            setDevLoginError(devLoginFailure);
-
-            throw devLoginFailure;
-        } finally {
-            setIsLoggingInWithDevToken(false);
-        }
-    };
-
-    const register = async (credentials: SignUpBody) => {
-        setRegisterError(null);
-        setIsRegistering(true);
-
-        try {
+    const registerMutation = useMutation<void, Error, SignUpBody>({
+        mutationFn: async (credentials) => {
             const authContext = await signUpRequest(credentials);
 
             await saveAuthContext(authContext);
-        } catch (error) {
-            const registerFailure =
-                error instanceof Error
-                    ? error
-                    : new Error('Register failed unexpectedly');
+        },
+        onError: resetAuthState,
+    });
 
-            setProfile(null);
-            setIsAuthenticated(false);
-            setRegisterError(registerFailure);
-
-            throw registerFailure;
-        } finally {
-            setIsRegistering(false);
-        }
-    };
-
-    const logout = async () => {
-        setLogoutError(null);
-        setIsLoggingOut(true);
-
-        try {
+    const logoutMutation = useMutation<void, Error>({
+        mutationFn: async () => {
             const session = await getSession();
             const devAuthToken = getDevAuthToken();
             const isDevSession =
-                devAuthToken.length > 0 && session?.accessToken === devAuthToken;
+                Boolean(devAuthToken) && session?.accessToken === devAuthToken;
 
             if (!isDevSession) {
                 await logoutRequest();
             }
 
             await clearSession();
-            setProfile(null);
-            setIsAuthenticated(false);
-        } catch (error) {
-            const logoutFailure =
-                error instanceof Error
-                    ? error
-                    : new Error('Logout failed unexpectedly');
+            resetAuthState();
+            queryClient.removeQueries();
+        },
+    });
 
-            setLogoutError(logoutFailure);
+    const login = async (credentials: LoginBody) => {
+        await loginMutation.mutateAsync(credentials);
+    };
 
-            throw logoutFailure;
-        } finally {
-            setIsLoggingOut(false);
-        }
+    const loginWithDevToken = async () => {
+        await devLoginMutation.mutateAsync();
+    };
+
+    const register = async (credentials: SignUpBody) => {
+        await registerMutation.mutateAsync(credentials);
+    };
+
+    const logout = async () => {
+        await logoutMutation.mutateAsync();
     };
 
     return (
         <AuthContext.Provider
             value={{
                 isAuthenticated,
-                setIsAuthenticated,
                 profile,
                 isRestoringSession,
                 login,
-                isLoggingIn,
-                loginError,
+                isLoggingIn: loginMutation.isPending,
+                loginError: loginMutation.error,
                 loginWithDevToken,
-                isLoggingInWithDevToken,
-                devLoginError,
+                isLoggingInWithDevToken: devLoginMutation.isPending,
+                devLoginError: devLoginMutation.error,
                 register,
-                isRegistering,
-                registerError,
+                isRegistering: registerMutation.isPending,
+                registerError: registerMutation.error,
                 logout,
-                isLoggingOut,
-                logoutError,
+                isLoggingOut: logoutMutation.isPending,
+                logoutError: logoutMutation.error,
             }}
         >
             {children}

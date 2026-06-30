@@ -37,14 +37,14 @@ const RootNavigator = () => {
 
 const RootLayout = () => {
     return (
-        <AuthProvider>
-            <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
                 <SafeAreaProvider>
                     <StatusBar backgroundColor="#ffffff" style="dark" />
                     <RootNavigator />
                 </SafeAreaProvider>
-            </QueryClientProvider>
-        </AuthProvider>
+            </AuthProvider>
+        </QueryClientProvider>
     );
 };
 

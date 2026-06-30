@@ -35,8 +35,6 @@ const createAuthValue = (
     profile: null,
     register: jest.fn<ReturnType<typeof useAuth>['register']>(),
     registerError: null,
-    setIsAuthenticated:
-        jest.fn<ReturnType<typeof useAuth>['setIsAuthenticated']>(),
     ...overrides,
 });
 
