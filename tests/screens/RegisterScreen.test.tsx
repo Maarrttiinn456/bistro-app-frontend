@@ -21,10 +21,15 @@ const createAuthValue = (
 ): ReturnType<typeof useAuth> => ({
     isAuthenticated: false,
     isLoggingIn: false,
+    isLoggingInWithDevToken: false,
     isLoggingOut: false,
+    isRestoringSession: false,
     isRegistering: false,
+    devLoginError: null,
     login: jest.fn<ReturnType<typeof useAuth>['login']>(),
     loginError: null,
+    loginWithDevToken:
+        jest.fn<ReturnType<typeof useAuth>['loginWithDevToken']>(),
     logout: jest.fn<ReturnType<typeof useAuth>['logout']>(),
     logoutError: null,
     profile: null,

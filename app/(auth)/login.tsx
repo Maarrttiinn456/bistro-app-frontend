@@ -9,7 +9,17 @@ const LoginScreen = () => {
     const [validationError, setValidationError] = useState<string | null>(null);
 
     const router = useRouter();
-    const { isLoggingIn, login, loginError } = useAuth();
+    const {
+        devLoginError,
+        isLoggingIn,
+        isLoggingInWithDevToken,
+        login,
+        loginError,
+        loginWithDevToken,
+    } = useAuth();
+    const hasDevAuthToken = Boolean(
+        process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN?.trim(),
+    );
 
     const handleLogin = async () => {
         const trimmedEmail = email.trim();
@@ -31,11 +41,22 @@ const LoginScreen = () => {
         }
     };
 
+    const handleDevLogin = async () => {
+        try {
+            await loginWithDevToken();
+        } catch {
+            return;
+        }
+    };
+
     const errorMessage =
         validationError ??
         (loginError === null
-            ? null
+            ? devLoginError === null
+                ? null
+                : 'Demo přihlášení se nepovedlo.'
             : 'Přihlášení se nepovedlo. Zkontroluj e-mail a heslo.');
+    const isSubmitting = isLoggingIn || isLoggingInWithDevToken;
 
     return (
         <View style={styles.container}>
@@ -65,14 +86,31 @@ const LoginScreen = () => {
             )}
             <Pressable
                 accessibilityRole="button"
-                disabled={isLoggingIn}
-                style={[styles.button, isLoggingIn && styles.buttonDisabled]}
+                disabled={isSubmitting}
+                style={[styles.button, isSubmitting && styles.buttonDisabled]}
                 onPress={handleLogin}
             >
                 <Text style={styles.buttonText}>
                     {isLoggingIn ? 'Přihlašuji...' : 'Přihlásit se'}
                 </Text>
             </Pressable>
+            {hasDevAuthToken && (
+                <Pressable
+                    accessibilityRole="button"
+                    disabled={isSubmitting}
+                    style={[
+                        styles.secondaryButton,
+                        isSubmitting && styles.buttonDisabled,
+                    ]}
+                    onPress={handleDevLogin}
+                >
+                    <Text style={styles.secondaryButtonText}>
+                        {isLoggingInWithDevToken
+                            ? 'Přihlašuji demo...'
+                            : 'Přihlásit jako demo'}
+                    </Text>
+                </Pressable>
+            )}
 
             <Text>
                 Nemáš účet?{' '}
@@ -127,6 +165,18 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    secondaryButton: {
+        alignItems: 'center',
+        borderColor: '#111827',
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingVertical: 14,
+    },
+    secondaryButtonText: {
+        color: '#111827',
         fontSize: 16,
         fontWeight: '600',
     },
