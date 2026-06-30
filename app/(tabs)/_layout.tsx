@@ -3,7 +3,19 @@ import { Tabs } from 'expo-router';
 
 const TabLayout = () => {
     return (
-        <Tabs screenOptions={{ headerShown: false }}>
+        <Tabs
+            screenOptions={{
+                headerShadowVisible: true,
+                headerStyle: { backgroundColor: '#ffffff' },
+                headerTintColor: '#111827',
+                headerTitleAlign: 'center',
+                headerTitleStyle: {
+                    color: '#111827',
+                    fontSize: 18,
+                    fontWeight: '700',
+                },
+            }}
+        >
             <Tabs.Screen
                 name="index"
                 options={{
@@ -20,6 +32,7 @@ const TabLayout = () => {
             <Tabs.Screen
                 name="recipes"
                 options={{
+                    headerShown: false,
                     title: 'Recepty',
                     tabBarIcon: ({ color, size }) => (
                         <MaterialCommunityIcons

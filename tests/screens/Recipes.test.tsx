@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 
 import Recipes from '@/app/(tabs)/recipes';
 import type { Recipe } from '@/src/api/generated/model';
 import { MealSlot } from '@/src/api/generated/model';
 import { useGetRecipes } from '@/src/api/generated/recipes/recipes';
+
+const mockPush = jest.fn();
+
+jest.mock('expo-router', () => ({
+    useRouter: () => ({
+        push: mockPush,
+    }),
+}));
 
 jest.mock('@/src/api/generated/recipes/recipes', () => ({
     useGetRecipes: jest.fn(),
@@ -82,5 +90,20 @@ describe('Recipes', () => {
         expect(screen.getByText('Rajčatové těstoviny')).toBeOnTheScreen();
         expect(screen.getByText('2 porce · 25 min')).toBeOnTheScreen();
         expect(screen.getByText('Oběd')).toBeOnTheScreen();
+    });
+
+    it('opens the recipe detail when a recipe is pressed', async () => {
+        const user = userEvent.setup();
+        mockRecipesQuery({ data: { recipes: [recipe] } });
+
+        await render(<Recipes />);
+        await user.press(
+            screen.getByRole('button', { name: /Rajčatové těstoviny/ }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/recipes/[recipeId]',
+            params: { recipeId: 'recipe-1' },
+        });
     });
 });

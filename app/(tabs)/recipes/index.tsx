@@ -1,41 +1,51 @@
-import { MealSlot, type Recipe } from '@/src/api/generated/model';
+import type { Recipe } from '@/src/api/generated/model';
 import { useGetRecipes } from '@/src/api/generated/recipes/recipes';
 import { Screen } from '@/src/components/Screen';
+import { formatMealTypes } from '@/src/recipes/recipeFormatters';
+import { useRouter } from 'expo-router';
 import {
     ActivityIndicator,
     FlatList,
+    Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
-const mealSlotLabels: Record<MealSlot, string> = {
-    [MealSlot.breakfast]: 'Snídaně',
-    [MealSlot.lunch]: 'Oběd',
-    [MealSlot.dinner]: 'Večeře',
-    [MealSlot.snack]: 'Svačina',
-};
-
-const formatMealTypes = (mealTypes: Recipe['mealTypes']) => {
-    return mealTypes.map((mealType) => mealSlotLabels[mealType]).join(', ');
-};
-
-const renderRecipe = ({ item }: { item: Recipe }) => {
+const RecipeListItem = ({
+    recipe,
+    onPress,
+}: {
+    recipe: Recipe;
+    onPress: (recipeId: string) => void;
+}) => {
     return (
-        <View style={styles.recipeItem}>
-            <Text style={styles.recipeName}>{item.name}</Text>
+        <Pressable
+            accessibilityRole="button"
+            style={styles.recipeItem}
+            onPress={() => onPress(recipe.id)}
+        >
+            <Text style={styles.recipeName}>{recipe.name}</Text>
             <Text style={styles.recipeMeta}>
-                {item.portions} porce · {item.prepTimeMin} min
+                {recipe.portions} porce · {recipe.prepTimeMin} min
             </Text>
             <Text style={styles.recipeMealTypes}>
-                {formatMealTypes(item.mealTypes)}
+                {formatMealTypes(recipe.mealTypes)}
             </Text>
-        </View>
+        </Pressable>
     );
 };
 
 const Recipes = () => {
+    const router = useRouter();
     const { data, isError, isLoading } = useGetRecipes();
+
+    const handleRecipePress = (recipeId: string) => {
+        router.push({
+            pathname: '/recipes/[recipeId]',
+            params: { recipeId },
+        });
+    };
 
     if (isLoading) {
         return (
@@ -76,7 +86,12 @@ const Recipes = () => {
                         Zatím nemáš žádné recepty.
                     </Text>
                 }
-                renderItem={renderRecipe}
+                renderItem={({ item }) => (
+                    <RecipeListItem
+                        recipe={item}
+                        onPress={handleRecipePress}
+                    />
+                )}
             />
         </Screen>
     );

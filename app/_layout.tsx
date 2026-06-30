@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -39,6 +40,7 @@ const RootLayout = () => {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <SafeAreaProvider>
+                    <StatusBar backgroundColor="#ffffff" style="dark" />
                     <RootNavigator />
                 </SafeAreaProvider>
             </QueryClientProvider>
