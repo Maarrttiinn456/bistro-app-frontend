@@ -7,8 +7,8 @@ const AuthLayout = () => {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="register" />
             <Stack.Screen name="login" />
+            <Stack.Screen name="register" />
         </Stack>
     );
 };

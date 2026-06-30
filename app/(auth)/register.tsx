@@ -1,4 +1,4 @@
-import { useSignUp } from '@/src/api/generated/auth/auth';
+import { useAuth } from '@/src/auth/useAuth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,39 +7,54 @@ const RegisterScreen = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const router = useRouter();
+    const { isRegistering, register, registerError } = useAuth();
 
-    const signUpMutation = useSignUp({
-        mutation: {
-            onSuccess: (data) => {
-                console.log('Registered:', data);
-            },
-            onError: (error) => {
-                console.log(
-                    'Register failed:',
-                    error.response?.status,
-                    error.response?.data ?? error.message,
-                );
-            },
-        },
-    });
+    const handleRegister = async () => {
+        const trimmedName = name.trim();
+        const trimmedEmail = email.trim();
 
-    const handleRegister = () => {
-        console.log('Registering user with:', { name, email, password });
-        signUpMutation.mutate({
-            data: {
-                name,
-                email,
+        if (
+            trimmedName.length === 0 ||
+            trimmedEmail.length === 0 ||
+            password.length === 0
+        ) {
+            setValidationError('Vyplň jméno, e-mail i heslo.');
+            return;
+        }
+
+        if (password.length < 6) {
+            setValidationError('Heslo musí mít alespoň 6 znaků.');
+            return;
+        }
+
+        setValidationError(null);
+
+        try {
+            await register({
+                name: trimmedName,
+                email: trimmedEmail,
                 password,
-            },
-        });
+            });
+        } catch {
+            return;
+        }
     };
+
+    const errorMessage =
+        validationError ??
+        (registerError === null ? null : 'Registrace se nepovedla.');
 
     return (
         <View style={styles.container}>
+            <Text style={styles.title}>Vytvořit účet</Text>
+            <Text style={styles.subtitle}>
+                Založ si účet a začni používat bistro aplikaci.
+            </Text>
             <TextInput
-                placeholder="Name"
+                placeholder="Jméno"
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
@@ -47,35 +62,37 @@ const RegisterScreen = () => {
             <TextInput
                 autoCapitalize="none"
                 keyboardType="email-address"
-                placeholder="Email"
+                placeholder="E-mail"
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
             />
             <TextInput
-                placeholder="Password"
+                placeholder="Heslo"
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
             />
+            {errorMessage !== null && (
+                <Text style={styles.errorText}>{errorMessage}</Text>
+            )}
             <Pressable
-                disabled={signUpMutation.isPending}
-                style={[
-                    styles.button,
-                    signUpMutation.isPending && styles.buttonDisabled,
-                ]}
+                disabled={isRegistering}
+                style={[styles.button, isRegistering && styles.buttonDisabled]}
                 onPress={handleRegister}
             >
-                <Text style={styles.buttonText}>Register</Text>
+                <Text style={styles.buttonText}>
+                    {isRegistering ? 'Registruji...' : 'Vytvořit účet'}
+                </Text>
             </Pressable>
 
             <Text>
-                Already have an account?{' '}
+                Už máš účet?{' '}
                 <Text
                     style={{ color: '#111827', fontWeight: '600' }}
                     onPress={() => router.push('/login')}
                 >
-                    Login
+                    Přihlásit se
                 </Text>
             </Text>
         </View>
@@ -88,6 +105,16 @@ const styles = StyleSheet.create({
         gap: 12,
         justifyContent: 'center',
         padding: 24,
+    },
+    title: {
+        color: '#111827',
+        fontSize: 28,
+        fontWeight: '700',
+    },
+    subtitle: {
+        color: '#667085',
+        fontSize: 15,
+        marginBottom: 8,
     },
     input: {
         borderColor: '#d0d5dd',
@@ -105,6 +132,10 @@ const styles = StyleSheet.create({
     },
     buttonDisabled: {
         opacity: 0.6,
+    },
+    errorText: {
+        color: '#b42318',
+        fontSize: 14,
     },
     buttonText: {
         color: '#ffffff',
