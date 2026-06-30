@@ -54,12 +54,14 @@ const RegisterScreen = () => {
                 Založ si účet a začni používat bistro aplikaci.
             </Text>
             <TextInput
+                accessibilityLabel="Jméno"
                 placeholder="Jméno"
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
             />
             <TextInput
+                accessibilityLabel="E-mail"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 placeholder="E-mail"
@@ -68,6 +70,7 @@ const RegisterScreen = () => {
                 onChangeText={setEmail}
             />
             <TextInput
+                accessibilityLabel="Heslo"
                 placeholder="Heslo"
                 style={styles.input}
                 value={password}
@@ -77,6 +80,7 @@ const RegisterScreen = () => {
                 <Text style={styles.errorText}>{errorMessage}</Text>
             )}
             <Pressable
+                accessibilityRole="button"
                 disabled={isRegistering}
                 style={[styles.button, isRegistering && styles.buttonDisabled]}
                 onPress={handleRegister}

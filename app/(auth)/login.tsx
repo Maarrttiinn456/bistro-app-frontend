@@ -44,6 +44,7 @@ const LoginScreen = () => {
                 Přihlas se a pokračuj do bistro aplikace.
             </Text>
             <TextInput
+                accessibilityLabel="E-mail"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 placeholder="E-mail"
@@ -52,6 +53,7 @@ const LoginScreen = () => {
                 onChangeText={setEmail}
             />
             <TextInput
+                accessibilityLabel="Heslo"
                 placeholder="Heslo"
                 secureTextEntry
                 style={styles.input}
@@ -62,6 +64,7 @@ const LoginScreen = () => {
                 <Text style={styles.errorText}>{errorMessage}</Text>
             )}
             <Pressable
+                accessibilityRole="button"
                 disabled={isLoggingIn}
                 style={[styles.button, isLoggingIn && styles.buttonDisabled]}
                 onPress={handleLogin}
