@@ -5,6 +5,7 @@ Tenhle soubor doplnuje hlavni `AGENTS.md`. Ma drzet prakticka pravidla pro struk
 ## Zakladni pravidlo
 
 - `app/` je pro routy, layouty a obrazovky.
+- Do `app/` nedavej test soubory (`*.test.tsx`, `*.test.ts`). Expo Router je muze brat jako routy a Metro je pak bundluje do aplikace. Testy pro screeny z `app/` patri do `tests/screens/`.
 - `src/` je pro pomocny kod mimo obrazovky, az kdyz zacne byt potreba.
 - `assets/` je pro obrazky a staticke soubory.
 - Kdyz neco neni potreba sdilet, nech to co nejbliz obrazovce.
@@ -29,6 +30,9 @@ src/
 
   query/
     queryClient.ts         # TanStack Query klient
+
+tests/
+  screens/                 # testy obrazovek z app/, mimo Expo Router routy
 ```
 
 ## API a Orval

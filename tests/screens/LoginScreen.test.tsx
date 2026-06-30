@@ -21,10 +21,15 @@ const createAuthValue = (
 ): ReturnType<typeof useAuth> => ({
     isAuthenticated: false,
     isLoggingIn: false,
+    isLoggingInWithDevToken: false,
     isLoggingOut: false,
+    isRestoringSession: false,
     isRegistering: false,
+    devLoginError: null,
     login: jest.fn<ReturnType<typeof useAuth>['login']>(),
     loginError: null,
+    loginWithDevToken:
+        jest.fn<ReturnType<typeof useAuth>['loginWithDevToken']>(),
     logout: jest.fn<ReturnType<typeof useAuth>['logout']>(),
     logoutError: null,
     profile: null,
@@ -38,6 +43,7 @@ const createAuthValue = (
 describe('LoginScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        delete process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN;
         mockedUseAuth.mockReturnValue(createAuthValue());
     });
 
@@ -99,5 +105,50 @@ describe('LoginScreen', () => {
         await render(<LoginScreen />);
 
         expect(screen.getByText(/e-mail a heslo/)).toBeOnTheScreen();
+    });
+
+    it('does not show the demo login button without a dev auth token', async () => {
+        await render(<LoginScreen />);
+
+        expect(
+            screen.queryByRole('button', { name: 'Přihlásit jako demo' }),
+        ).not.toBeOnTheScreen();
+    });
+
+    it('calls dev login when the demo login button is pressed', async () => {
+        const user = userEvent.setup();
+        const loginWithDevToken =
+            jest
+                .fn<ReturnType<typeof useAuth>['loginWithDevToken']>()
+                .mockResolvedValue(undefined);
+        process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN = 'dev-token';
+        mockedUseAuth.mockReturnValue(
+            createAuthValue({
+                loginWithDevToken,
+            }),
+        );
+
+        await render(<LoginScreen />);
+
+        await user.press(
+            screen.getByRole('button', { name: 'Přihlásit jako demo' }),
+        );
+
+        expect(loginWithDevToken).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables the demo login button while dev login is running', async () => {
+        process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN = 'dev-token';
+        mockedUseAuth.mockReturnValue(
+            createAuthValue({
+                isLoggingInWithDevToken: true,
+            }),
+        );
+
+        await render(<LoginScreen />);
+
+        expect(
+            screen.getByRole('button', { name: 'Přihlašuji demo...' }),
+        ).toBeDisabled();
     });
 });

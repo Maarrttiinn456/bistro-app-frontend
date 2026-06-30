@@ -3,10 +3,12 @@ import {
     type Dispatch,
     type ReactNode,
     type SetStateAction,
+    useEffect,
     useState,
 } from 'react';
 
 import {
+    getMe,
     login as loginRequest,
     logout as logoutRequest,
     signUp as signUpRequest,
@@ -15,17 +17,22 @@ import type {
     AuthContext as BackendAuthContext,
     LoginBody,
     Profile,
+    Session,
     SignUpBody,
 } from '@/src/api/generated/model';
-import { clearSession, saveSession } from '@/src/auth/authStorage';
+import { clearSession, getSession, saveSession } from '@/src/auth/authStorage';
 
 type AuthContextValue = {
     isAuthenticated: boolean;
     setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
     profile: Profile | null;
+    isRestoringSession: boolean;
     login: (credentials: LoginBody) => Promise<void>;
     isLoggingIn: boolean;
     loginError: Error | null;
+    loginWithDevToken: () => Promise<void>;
+    isLoggingInWithDevToken: boolean;
+    devLoginError: Error | null;
     register: (credentials: SignUpBody) => Promise<void>;
     isRegistering: boolean;
     registerError: Error | null;
@@ -45,21 +52,77 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [isRestoringSession, setIsRestoringSession] = useState(true);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [loginError, setLoginError] = useState<Error | null>(null);
+    const [isLoggingInWithDevToken, setIsLoggingInWithDevToken] =
+        useState(false);
+    const [devLoginError, setDevLoginError] = useState<Error | null>(null);
     const [isRegistering, setIsRegistering] = useState(false);
     const [registerError, setRegisterError] = useState<Error | null>(null);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState<Error | null>(null);
 
-    const applyAuthContext = async (authContext: BackendAuthContext) => {
+    const applyUserContext = (authContext: BackendAuthContext) => {
+        setProfile(authContext.profile);
+        setIsAuthenticated(true);
+    };
+
+    const saveAuthContext = async (authContext: BackendAuthContext) => {
         if (authContext.session.accessToken === null) {
             throw new Error('Auth response does not contain an access token');
         }
 
         await saveSession(authContext.session);
-        setProfile(authContext.profile);
-        setIsAuthenticated(true);
+        applyUserContext(authContext);
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const restoreSession = async () => {
+            try {
+                const session = await getSession();
+
+                if (session?.accessToken === null || !session?.accessToken) {
+                    return;
+                }
+
+                const authContext = await getMe();
+
+                if (isMounted) {
+                    applyUserContext(authContext);
+                }
+            } catch {
+                await clearSession();
+
+                if (isMounted) {
+                    setProfile(null);
+                    setIsAuthenticated(false);
+                }
+            } finally {
+                if (isMounted) {
+                    setIsRestoringSession(false);
+                }
+            }
+        };
+
+        void restoreSession();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const createDevSession = (accessToken: string): Session => ({
+        accessToken,
+        expiresIn: null,
+        refreshToken: null,
+        tokenType: 'bearer',
+    });
+
+    const getDevAuthToken = () => {
+        return process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN?.trim() ?? '';
     };
 
     const login = async (credentials: LoginBody) => {
@@ -69,7 +132,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
             const authContext = await loginRequest(credentials);
 
-            await applyAuthContext(authContext);
+            await saveAuthContext(authContext);
         } catch (error) {
             const loginFailure =
                 error instanceof Error
@@ -86,6 +149,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
+    const loginWithDevToken = async () => {
+        setDevLoginError(null);
+        setIsLoggingInWithDevToken(true);
+
+        const devAuthToken = getDevAuthToken();
+
+        try {
+            if (!devAuthToken) {
+                throw new Error('Dev auth token is not configured');
+            }
+
+            await saveSession(createDevSession(devAuthToken));
+
+            const authContext = await getMe();
+
+            applyUserContext(authContext);
+        } catch (error) {
+            await clearSession();
+
+            const devLoginFailure =
+                error instanceof Error
+                    ? error
+                    : new Error('Dev login failed unexpectedly');
+
+            setProfile(null);
+            setIsAuthenticated(false);
+            setDevLoginError(devLoginFailure);
+
+            throw devLoginFailure;
+        } finally {
+            setIsLoggingInWithDevToken(false);
+        }
+    };
+
     const register = async (credentials: SignUpBody) => {
         setRegisterError(null);
         setIsRegistering(true);
@@ -93,7 +190,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
             const authContext = await signUpRequest(credentials);
 
-            await applyAuthContext(authContext);
+            await saveAuthContext(authContext);
         } catch (error) {
             const registerFailure =
                 error instanceof Error
@@ -115,7 +212,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsLoggingOut(true);
 
         try {
-            await logoutRequest();
+            const session = await getSession();
+            const devAuthToken = getDevAuthToken();
+            const isDevSession =
+                devAuthToken.length > 0 && session?.accessToken === devAuthToken;
+
+            if (!isDevSession) {
+                await logoutRequest();
+            }
+
             await clearSession();
             setProfile(null);
             setIsAuthenticated(false);
@@ -139,9 +244,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 isAuthenticated,
                 setIsAuthenticated,
                 profile,
+                isRestoringSession,
                 login,
                 isLoggingIn,
                 loginError,
+                loginWithDevToken,
+                isLoggingInWithDevToken,
+                devLoginError,
                 register,
                 isRegistering,
                 registerError,

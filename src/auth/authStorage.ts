@@ -25,7 +25,7 @@ export const clearSession = async () => {
     await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
 };
 
-const getSession = async (): Promise<Session | null> => {
+export const getSession = async (): Promise<Session | null> => {
     const serializedSession =
         Platform.OS === 'web'
             ? localStorage.getItem(AUTH_SESSION_KEY)
