@@ -6,28 +6,34 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  CreateIngredientBody,
   ErrorResponse,
   GetIngredientsParams,
-  GetIngredientsResponse
+  GetIngredientsResponse,
+  IngredientResponse
 } from '../model';
 
 import { customInstance } from '../../mutator';
-import type { ErrorType } from '../../mutator';
+import type { ErrorType , BodyType } from '../../mutator';
 
 
 
@@ -48,6 +54,69 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
+ * @summary Create ingredient
+ */
+export const createIngredient = (
+    createIngredientBody: BodyType<CreateIngredientBody>,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<IngredientResponse>(
+      {url: `/v1/ingredients`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createIngredientBody, signal
+    },
+      );
+    }
+
+
+
+export const getCreateIngredientMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createIngredient>>, TError,{data: BodyType<CreateIngredientBody>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createIngredient>>, TError,{data: BodyType<CreateIngredientBody>}, TContext> => {
+
+const mutationKey = ['createIngredient'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createIngredient>>, {data: BodyType<CreateIngredientBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createIngredient(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateIngredientMutationResult = NonNullable<Awaited<ReturnType<typeof createIngredient>>>
+    export type CreateIngredientMutationBody = BodyType<CreateIngredientBody>
+    export type CreateIngredientMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create ingredient
+ */
+export const useCreateIngredient = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createIngredient>>, TError,{data: BodyType<CreateIngredientBody>}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createIngredient>>,
+        TError,
+        {data: BodyType<CreateIngredientBody>},
+        TContext
+      > => {
+      return useMutation(getCreateIngredientMutationOptions(options), queryClient);
+    }
+    /**
  * @summary List ingredients
  */
 export const getIngredients = (

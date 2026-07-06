@@ -41,6 +41,10 @@ const Recipes = () => {
     const router = useRouter();
     const { data, isError, isLoading } = useGetRecipes();
 
+    const handleIngredientsPress = () => {
+        router.push('/recipes/ingredients');
+    };
+
     const handleRecipePress = (recipeId: string) => {
         router.push({
             pathname: '/recipes/[recipeId]',
@@ -82,6 +86,17 @@ const Recipes = () => {
                 contentContainerStyle={styles.listContent}
                 data={recipes}
                 keyExtractor={(recipe) => recipe.id}
+                ListHeaderComponent={
+                    <Pressable
+                        accessibilityRole="button"
+                        style={styles.ingredientsButton}
+                        onPress={handleIngredientsPress}
+                    >
+                        <Text style={styles.ingredientsButtonText}>
+                            Ingredience
+                        </Text>
+                    </Pressable>
+                }
                 ListEmptyComponent={
                     <Text style={styles.stateText}>
                         Zatím nemáš žádné recepty.
@@ -105,6 +120,20 @@ const styles = StyleSheet.create({
     listContent: {
         gap: 12,
         paddingBottom: 96,
+    },
+    ingredientsButton: {
+        alignItems: 'center',
+        backgroundColor: '#111827',
+        borderRadius: 8,
+        minHeight: 44,
+        justifyContent: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+    },
+    ingredientsButtonText: {
+        color: '#ffffff',
+        fontSize: 15,
+        fontWeight: '700',
     },
     recipeItem: {
         borderColor: '#d0d5dd',
