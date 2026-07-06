@@ -109,26 +109,6 @@ describe('Recipes', () => {
         });
     });
 
-    it('shows the ingredients button', async () => {
-        mockRecipesQuery({ data: { recipes: [recipe] } });
-
-        await render(<Recipes />);
-
-        expect(
-            screen.getByRole('button', { name: 'Ingredience' }),
-        ).toBeOnTheScreen();
-    });
-
-    it('opens ingredients from the ingredients button', async () => {
-        const user = userEvent.setup();
-        mockRecipesQuery({ data: { recipes: [recipe] } });
-
-        await render(<Recipes />);
-        await user.press(screen.getByRole('button', { name: 'Ingredience' }));
-
-        expect(mockPush).toHaveBeenCalledWith('/recipes/ingredients');
-    });
-
     it('shows the add recipe floating action button', async () => {
         mockRecipesQuery({ data: { recipes: [recipe] } });
 

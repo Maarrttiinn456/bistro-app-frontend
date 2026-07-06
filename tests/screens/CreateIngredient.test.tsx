@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 
-import CreateIngredient from '@/app/(tabs)/recipes/create-ingredient';
+import CreateIngredient from '@/app/(tabs)/ingredients/create';
 import type {
     CreateIngredientBody,
     Ingredient,
@@ -12,7 +12,7 @@ import {
     IngredientBaseUnit,
 } from '@/src/api/generated/model';
 import { useCreateIngredient } from '@/src/api/generated/ingredients/ingredients';
-import { createdIngredientHandoffQueryKey } from '@/src/recipes/createIngredientHandoff';
+import { createdIngredientHandoffQueryKey } from '@/src/ingredients/createIngredientHandoff';
 
 const mockBack = jest.fn();
 const mockInvalidateQueries = jest.fn();
@@ -131,6 +131,38 @@ describe('CreateIngredient', () => {
                 rowId: 'row-1',
             },
         );
+        expect(mockInvalidateQueries).toHaveBeenCalledWith({
+            queryKey: ['/v1/ingredients'],
+        });
+        expect(mockBack).toHaveBeenCalled();
+    });
+
+    it('creates the ingredient without handoff when opened from ingredients', async () => {
+        const user = userEvent.setup();
+        mockSearchParams = {};
+
+        await render(<CreateIngredient />);
+        await user.type(screen.getByLabelText('Název nové suroviny'), 'Tempeh');
+        await user.type(screen.getByLabelText('Kalorie na 100 g'), '80');
+        await user.type(screen.getByLabelText('Bílkoviny na 100 g'), '15');
+        await user.type(screen.getByLabelText('Sacharidy na 100 g'), '12');
+        await user.type(screen.getByLabelText('Tuky na 100 g'), '3');
+        await user.press(screen.getByRole('button', { name: 'Uložit surovinu' }));
+
+        await waitFor(() =>
+            expect(createIngredientMutateAsync).toHaveBeenCalledWith({
+                data: {
+                    baseUnit: CreateIngredientBodyBaseUnit.g,
+                    brand: null,
+                    carbsPer100: 12,
+                    fatPer100: 3,
+                    kcalPer100: 80,
+                    name: 'Tempeh',
+                    proteinPer100: 15,
+                },
+            }),
+        );
+        expect(mockSetQueryData).not.toHaveBeenCalled();
         expect(mockInvalidateQueries).toHaveBeenCalledWith({
             queryKey: ['/v1/ingredients'],
         });

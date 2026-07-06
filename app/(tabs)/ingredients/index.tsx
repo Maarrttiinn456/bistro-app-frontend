@@ -1,10 +1,13 @@
 import type { Ingredient } from '@/src/api/generated/model';
 import { GetIngredientsScope } from '@/src/api/generated/model';
 import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
+import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
 import { Screen } from '@/src/components/Screen';
+import { useRouter } from 'expo-router';
 import {
     ActivityIndicator,
     FlatList,
+    Pressable,
     StyleSheet,
     Text,
     View,
@@ -14,9 +17,20 @@ const formatNutritionPer100 = (ingredient: Ingredient) => {
     return `Na 100 ${ingredient.baseUnit}: ${ingredient.kcalPer100} kcal · B ${ingredient.proteinPer100}g · S ${ingredient.carbsPer100}g · T ${ingredient.fatPer100}g`;
 };
 
-const IngredientListItem = ({ ingredient }: { ingredient: Ingredient }) => {
+const IngredientListItem = ({
+    ingredient,
+    onPress,
+}: {
+    ingredient: Ingredient;
+    onPress: () => void;
+}) => {
     return (
-        <View style={styles.ingredientItem}>
+        <Pressable
+            accessibilityLabel={`Otevřít ingredienci ${ingredient.name}`}
+            accessibilityRole="button"
+            style={styles.ingredientItem}
+            onPress={onPress}
+        >
             <Text style={styles.ingredientName}>{ingredient.name}</Text>
             {ingredient.brand ? (
                 <Text style={styles.ingredientBrand}>{ingredient.brand}</Text>
@@ -27,14 +41,19 @@ const IngredientListItem = ({ ingredient }: { ingredient: Ingredient }) => {
             <Text style={styles.ingredientNutrition}>
                 {formatNutritionPer100(ingredient)}
             </Text>
-        </View>
+        </Pressable>
     );
 };
 
 const Ingredients = () => {
+    const router = useRouter();
     const { data, isError, isLoading } = useGetIngredients({
         scope: GetIngredientsScope.all,
     });
+
+    const handleCreateIngredientPress = () => {
+        router.push('/ingredients/create');
+    };
 
     if (isLoading) {
         return (
@@ -78,9 +97,34 @@ const Ingredients = () => {
                     </Text>
                 }
                 renderItem={({ item }) => (
-                    <IngredientListItem ingredient={item} />
+                    <IngredientListItem
+                        ingredient={item}
+                        onPress={() => {
+                            router.push({
+                                pathname: '/ingredients/[ingredientId]',
+                                params: { ingredientId: item.id },
+                            });
+                        }}
+                    />
                 )}
                 showsVerticalScrollIndicator={false}
+            />
+            <FloatingActionMenu
+                accessibilityLabel="Přidat ingredienci"
+                closedIcon="plus"
+                items={[
+                    {
+                        icon: 'pencil-plus',
+                        label: 'Přidat ručně',
+                        onPress: handleCreateIngredientPress,
+                    },
+                    {
+                        disabled: true,
+                        hint: 'Připravujeme',
+                        icon: 'barcode-scan',
+                        label: 'Naskenovat kód',
+                    },
+                ]}
             />
         </Screen>
     );
@@ -117,7 +161,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         gap: 12,
-        paddingBottom: 24,
+        paddingBottom: 96,
     },
     stateContainer: {
         alignItems: 'center',

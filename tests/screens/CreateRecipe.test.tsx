@@ -286,7 +286,7 @@ describe('CreateRecipe', () => {
         );
 
         expect(mockPush).toHaveBeenCalledWith({
-            pathname: '/recipes/create-ingredient',
+            pathname: '/ingredients/create',
             params: expect.objectContaining({
                 name: 'Tempeh',
             }),

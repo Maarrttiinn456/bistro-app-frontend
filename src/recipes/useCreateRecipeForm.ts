@@ -14,7 +14,7 @@ import {
 import {
     createdIngredientHandoffQueryKey,
     type CreatedIngredientHandoff,
-} from '@/src/recipes/createIngredientHandoff';
+} from '@/src/ingredients/createIngredientHandoff';
 import {
     buildCreateRecipeBody,
     calculateMacroTotals,

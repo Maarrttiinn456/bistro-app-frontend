@@ -1,13 +1,23 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 
-import Ingredients from '@/app/(tabs)/recipes/ingredients';
+import Ingredients from '@/app/(tabs)/ingredients';
 import type { Ingredient } from '@/src/api/generated/model';
 import {
     GetIngredientsScope,
     IngredientBaseUnit,
 } from '@/src/api/generated/model';
 import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
+
+const mockPush = jest.fn();
+
+jest.mock('expo-router', () => ({
+    useRouter: () => ({
+        push: mockPush,
+    }),
+}));
+
+jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
 jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
     useGetIngredients: jest.fn(),
@@ -95,5 +105,43 @@ describe('Ingredients', () => {
         expect(
             screen.getByText('Na 100 g: 18 kcal · B 0.9g · S 4g · T 0.2g'),
         ).toBeOnTheScreen();
+    });
+
+    it('opens ingredient detail from the list', async () => {
+        const user = userEvent.setup();
+        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+
+        await render(<Ingredients />);
+        await user.press(
+            screen.getByRole('button', {
+                name: 'Otevřít ingredienci Rajčata',
+            }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/ingredients/[ingredientId]',
+            params: { ingredientId: 'ingredient-1' },
+        });
+    });
+
+    it('opens manual ingredient creation from the floating action button', async () => {
+        const user = userEvent.setup();
+        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+
+        await render(<Ingredients />);
+        await user.press(
+            screen.getByRole('button', { name: 'Přidat ingredienci' }),
+        );
+        const scanCodeButton = screen.getByRole('button', {
+            name: /Naskenovat kód/,
+        });
+
+        expect(scanCodeButton).toBeDisabled();
+        expect(screen.getByText('Připravujeme')).toBeOnTheScreen();
+        await user.press(
+            screen.getByRole('button', { name: /Přidat ručně/ }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith('/ingredients/create');
     });
 });

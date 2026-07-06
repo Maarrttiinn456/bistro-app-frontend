@@ -23,8 +23,11 @@ import { Screen } from '@/src/components/Screen';
 import {
     createdIngredientHandoffQueryKey,
     type CreatedIngredientHandoff,
-} from '@/src/recipes/createIngredientHandoff';
-import { parseFormNumber, toOptionalText } from '@/src/recipes/createRecipeForm';
+} from '@/src/ingredients/createIngredientHandoff';
+import {
+    parseIngredientFormNumber,
+    toOptionalIngredientText,
+} from '@/src/ingredients/createIngredientForm';
 
 const getStringParam = (value: string | string[] | undefined) => {
     if (Array.isArray(value)) {
@@ -76,15 +79,11 @@ const CreateIngredient = () => {
 
     const handleSubmit = async () => {
         const trimmedName = name.trim();
-        const parsedKcalPer100 = parseFormNumber(kcalPer100);
-        const parsedProteinPer100 = parseFormNumber(proteinPer100);
-        const parsedCarbsPer100 = parseFormNumber(carbsPer100);
-        const parsedFatPer100 = parseFormNumber(fatPer100);
-
-        if (rowId.length === 0) {
-            setError('Chybí řádek receptu pro návrat.');
-            return;
-        }
+        const parsedKcalPer100 = parseIngredientFormNumber(kcalPer100);
+        const parsedProteinPer100 =
+            parseIngredientFormNumber(proteinPer100);
+        const parsedCarbsPer100 = parseIngredientFormNumber(carbsPer100);
+        const parsedFatPer100 = parseIngredientFormNumber(fatPer100);
 
         if (trimmedName.length === 0) {
             setError('Vyplň název suroviny.');
@@ -111,7 +110,7 @@ const CreateIngredient = () => {
             const response = await createIngredientMutation.mutateAsync({
                 data: {
                     baseUnit,
-                    brand: toOptionalText(brand),
+                    brand: toOptionalIngredientText(brand),
                     carbsPer100: parsedCarbsPer100,
                     fatPer100: parsedFatPer100,
                     kcalPer100: parsedKcalPer100,
@@ -120,13 +119,16 @@ const CreateIngredient = () => {
                 },
             });
 
-            queryClient.setQueryData<CreatedIngredientHandoff>(
-                createdIngredientHandoffQueryKey,
-                {
-                    ingredient: response.ingredient,
-                    rowId,
-                },
-            );
+            if (rowId.length > 0) {
+                queryClient.setQueryData<CreatedIngredientHandoff>(
+                    createdIngredientHandoffQueryKey,
+                    {
+                        ingredient: response.ingredient,
+                        rowId,
+                    },
+                );
+            }
+
             await queryClient.invalidateQueries({
                 queryKey: getGetIngredientsQueryKey(),
             });

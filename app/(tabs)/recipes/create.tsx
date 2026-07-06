@@ -13,7 +13,7 @@ const CreateRecipe = () => {
     const form = useCreateRecipeForm({
         onCreateIngredient: ({ name, rowId }) => {
             router.push({
-                pathname: '/recipes/create-ingredient',
+                pathname: '/ingredients/create',
                 params: { name, rowId },
             });
         },

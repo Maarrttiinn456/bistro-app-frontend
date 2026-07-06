@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-const RecipesLayout = () => {
+const IngredientsLayout = () => {
     return (
         <Stack
             screenOptions={{
@@ -15,18 +15,14 @@ const RecipesLayout = () => {
                 },
             }}
         >
-            <Stack.Screen name="index" options={{ title: 'Recepty' }} />
+            <Stack.Screen name="index" options={{ title: 'Ingredience' }} />
+            <Stack.Screen name="create" options={{ title: 'Nová surovina' }} />
             <Stack.Screen
-                name="create"
-                options={{ title: 'Nový recept' }}
-            />
-            <Stack.Screen name="[recipeId]" options={{ title: 'Recept' }} />
-            <Stack.Screen
-                name="[recipeId]/edit"
-                options={{ title: 'Upravit recept' }}
+                name="[ingredientId]"
+                options={{ title: 'Detail ingredience' }}
             />
         </Stack>
     );
 };
 
-export default RecipesLayout;
+export default IngredientsLayout;
