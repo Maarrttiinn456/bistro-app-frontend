@@ -26,6 +26,7 @@ jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
 const mockedUseGetIngredients = jest.mocked(useGetIngredients);
 
 const ingredient: Ingredient = {
+    archivedAt: null,
     barcode: null,
     baseUnit: IngredientBaseUnit.g,
     brand: 'Bio farma',
@@ -132,12 +133,14 @@ describe('Ingredients', () => {
         await user.press(
             screen.getByRole('button', { name: 'Přidat ingredienci' }),
         );
-        const scanCodeButton = screen.getByRole('button', {
-            name: /Naskenovat kód/,
-        });
+        await user.press(
+            screen.getByRole('button', { name: /Naskenovat kód/ }),
+        );
 
-        expect(scanCodeButton).toBeDisabled();
-        expect(screen.getByText('Připravujeme')).toBeOnTheScreen();
+        expect(mockPush).toHaveBeenCalledWith('/ingredients/scan');
+        await user.press(
+            screen.getByRole('button', { name: 'Přidat ingredienci' }),
+        );
         await user.press(
             screen.getByRole('button', { name: /Přidat ručně/ }),
         );

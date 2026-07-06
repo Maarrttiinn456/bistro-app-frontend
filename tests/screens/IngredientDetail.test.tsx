@@ -10,9 +10,9 @@ import {
 } from '@/src/api/generated/model';
 import {
     getGetIngredientsQueryKey,
+    useArchiveIngredient,
     useGetIngredients,
 } from '@/src/api/generated/ingredients/ingredients';
-import { useDeleteIngredient } from '@/src/ingredients/ingredientApi';
 
 const mockReplace = jest.fn();
 const mockInvalidateQueries = jest.fn();
@@ -36,21 +36,19 @@ jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
 jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
     getGetIngredientsQueryKey: jest.fn(() => ['/v1/ingredients']),
+    useArchiveIngredient: jest.fn(),
     useGetIngredients: jest.fn(),
 }));
 
-jest.mock('@/src/ingredients/ingredientApi', () => ({
-    useDeleteIngredient: jest.fn(),
-}));
-
 const mockedUseGetIngredients = jest.mocked(useGetIngredients);
-const mockedUseDeleteIngredient = jest.mocked(useDeleteIngredient);
+const mockedUseArchiveIngredient = jest.mocked(useArchiveIngredient);
 const mockedGetGetIngredientsQueryKey = jest.mocked(getGetIngredientsQueryKey);
-const mockDeleteIngredientMutateAsync = jest.fn<
-    (_variables: { ingredientId: string }) => Promise<void>
+const mockArchiveIngredientMutateAsync = jest.fn<
+    (_variables: { ingredientId: string }) => Promise<unknown>
 >();
 
 const ingredient: Ingredient = {
+    archivedAt: null,
     barcode: '123456',
     baseUnit: IngredientBaseUnit.g,
     brand: 'Bio farma',
@@ -77,15 +75,17 @@ const mockIngredientsQuery = (
     } as ReturnType<typeof useGetIngredients>);
 };
 
-const mockDeleteIngredientMutation = (
-    overrides: Partial<ReturnType<typeof useDeleteIngredient>> = {},
+const mockArchiveIngredientMutation = (
+    overrides: Partial<ReturnType<typeof useArchiveIngredient>> = {},
 ) => {
-    mockDeleteIngredientMutateAsync.mockResolvedValue(undefined);
-    mockedUseDeleteIngredient.mockReturnValue({
+    mockArchiveIngredientMutateAsync.mockResolvedValue({
+        ingredient,
+    });
+    mockedUseArchiveIngredient.mockReturnValue({
         isPending: false,
-        mutateAsync: mockDeleteIngredientMutateAsync,
+        mutateAsync: mockArchiveIngredientMutateAsync,
         ...overrides,
-    } as unknown as ReturnType<typeof useDeleteIngredient>);
+    } as unknown as ReturnType<typeof useArchiveIngredient>);
 };
 
 describe('IngredientDetailScreen', () => {
@@ -93,7 +93,7 @@ describe('IngredientDetailScreen', () => {
         jest.clearAllMocks();
         jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
         mockIngredientsQuery();
-        mockDeleteIngredientMutation();
+        mockArchiveIngredientMutation();
     });
 
     it('loads ingredients for the detail route id', async () => {
@@ -201,7 +201,7 @@ describe('IngredientDetailScreen', () => {
                 }),
             ]),
         );
-        expect(mockDeleteIngredientMutateAsync).not.toHaveBeenCalled();
+        expect(mockArchiveIngredientMutateAsync).not.toHaveBeenCalled();
     });
 
     it('deletes the ingredient after confirmation and returns to ingredients', async () => {
@@ -223,7 +223,7 @@ describe('IngredientDetailScreen', () => {
         alertButtons.find((button) => button.text === 'Smazat')?.onPress?.();
 
         await waitFor(() => {
-            expect(mockDeleteIngredientMutateAsync).toHaveBeenCalledWith({
+            expect(mockArchiveIngredientMutateAsync).toHaveBeenCalledWith({
                 ingredientId: 'ingredient-1',
             });
         });
@@ -237,7 +237,7 @@ describe('IngredientDetailScreen', () => {
     it('shows an error alert when ingredient delete fails', async () => {
         const user = userEvent.setup();
         mockIngredientsQuery({ data: { ingredients: [ingredient] } });
-        mockDeleteIngredientMutateAsync.mockRejectedValue(
+        mockArchiveIngredientMutateAsync.mockRejectedValue(
             new Error('Delete failed'),
         );
 

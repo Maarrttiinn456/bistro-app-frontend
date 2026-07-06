@@ -15,6 +15,7 @@ type CreateRecipeIngredientsSectionProps = {
     onCreateIngredient: (row: RecipeIngredientRow) => void;
     onFocus: (rowId: string) => void;
     onRemove: (rowId: string) => void;
+    onScan: (row: RecipeIngredientRow) => void;
     onSearchChange: (rowId: string, value: string) => void;
     onSelect: (rowId: string, ingredient: Ingredient) => void;
     onToggleDisplayAmount: (rowId: string) => void;
@@ -30,6 +31,7 @@ export const CreateRecipeIngredientsSection = ({
     onCreateIngredient,
     onFocus,
     onRemove,
+    onScan,
     onSearchChange,
     onSelect,
     onToggleDisplayAmount,
@@ -67,6 +69,7 @@ export const CreateRecipeIngredientsSection = ({
                     onCreateIngredient={onCreateIngredient}
                     onFocus={onFocus}
                     onRemove={onRemove}
+                    onScan={onScan}
                     onSearchChange={onSearchChange}
                     onSelect={onSelect}
                     onToggleDisplayAmount={onToggleDisplayAmount}

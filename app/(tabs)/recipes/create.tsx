@@ -17,6 +17,12 @@ const CreateRecipe = () => {
                 params: { name, rowId },
             });
         },
+        onScanIngredient: ({ rowId }) => {
+            router.push({
+                pathname: '/ingredients/scan',
+                params: { rowId },
+            });
+        },
         onRecipeCreated: (recipeId) => {
             router.push({
                 pathname: '/recipes/[recipeId]',
@@ -54,6 +60,7 @@ const CreateRecipe = () => {
                     onCreateIngredient={form.handleCreateIngredient}
                     onFocus={form.setActiveIngredientRowId}
                     onRemove={form.handleRemoveIngredientRow}
+                    onScan={form.handleScanIngredient}
                     onSearchChange={form.handleIngredientSearchChange}
                     onSelect={form.handleIngredientSelect}
                     onToggleDisplayAmount={form.handleToggleDisplayAmount}

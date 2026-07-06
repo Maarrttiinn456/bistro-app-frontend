@@ -2,9 +2,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { type Href, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 
-import { getGetIngredientsQueryKey } from '@/src/api/generated/ingredients/ingredients';
+import {
+    getGetIngredientsQueryKey,
+    useArchiveIngredient,
+} from '@/src/api/generated/ingredients/ingredients';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
-import { useDeleteIngredient } from '@/src/ingredients/ingredientApi';
 
 type IngredientDetailActionMenuProps = {
     ingredientId: string;
@@ -15,11 +17,11 @@ export const IngredientDetailActionMenu = ({
 }: IngredientDetailActionMenuProps) => {
     const queryClient = useQueryClient();
     const router = useRouter();
-    const deleteIngredientMutation = useDeleteIngredient();
+    const archiveIngredientMutation = useArchiveIngredient();
 
     const handleDeleteConfirm = async () => {
         try {
-            await deleteIngredientMutation.mutateAsync({ ingredientId });
+            await archiveIngredientMutation.mutateAsync({ ingredientId });
             await queryClient.invalidateQueries({
                 queryKey: getGetIngredientsQueryKey(),
             });
@@ -62,8 +64,8 @@ export const IngredientDetailActionMenu = ({
                 },
                 {
                     destructive: true,
-                    disabled: deleteIngredientMutation.isPending,
-                    hint: deleteIngredientMutation.isPending
+                    disabled: archiveIngredientMutation.isPending,
+                    hint: archiveIngredientMutation.isPending
                         ? 'Mažu...'
                         : undefined,
                     icon: 'trash-can-outline',

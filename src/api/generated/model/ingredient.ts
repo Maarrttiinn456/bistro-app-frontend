@@ -25,5 +25,7 @@ export interface Ingredient {
   servingGrams: number | null;
   /** @nullable */
   servingLabel: string | null;
+  /** @nullable */
+  archivedAt: string | null;
   createdAt: string;
 }

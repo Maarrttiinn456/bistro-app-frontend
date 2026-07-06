@@ -18,6 +18,14 @@ const IngredientsLayout = () => {
             <Stack.Screen name="index" options={{ title: 'Ingredience' }} />
             <Stack.Screen name="create" options={{ title: 'Nová surovina' }} />
             <Stack.Screen
+                name="scan"
+                options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    title: 'Skenovat kod',
+                }}
+            />
+            <Stack.Screen
                 name="[ingredientId]"
                 options={{ title: 'Detail ingredience' }}
             />

@@ -24,11 +24,13 @@ import {
 
 type UseCreateRecipeFormParams = {
     onCreateIngredient: (params: { name: string; rowId: string }) => void;
+    onScanIngredient: (params: { rowId: string }) => void;
     onRecipeCreated: (recipeId: string) => void;
 };
 
 export const useCreateRecipeForm = ({
     onCreateIngredient,
+    onScanIngredient,
     onRecipeCreated,
 }: UseCreateRecipeFormParams) => {
     const queryClient = useQueryClient();
@@ -185,6 +187,11 @@ export const useCreateRecipeForm = ({
         });
     };
 
+    const handleScanIngredient = (row: RecipeIngredientRow) => {
+        setActiveIngredientRowId(row.id);
+        onScanIngredient({ rowId: row.id });
+    };
+
     const handleSubmit = async () => {
         const result = buildCreateRecipeBody({
             image,
@@ -252,6 +259,7 @@ export const useCreateRecipeForm = ({
         handleIngredientSelect,
         handleMealTypePress,
         handleRemoveIngredientRow,
+        handleScanIngredient,
         handleSubmit,
         handleToggleDisplayAmount,
         setActiveIngredientRowId,

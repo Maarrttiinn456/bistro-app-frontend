@@ -55,6 +55,10 @@ const Ingredients = () => {
         router.push('/ingredients/create');
     };
 
+    const handleScanIngredientPress = () => {
+        router.push('/ingredients/scan');
+    };
+
     if (isLoading) {
         return (
             <Screen>
@@ -119,10 +123,9 @@ const Ingredients = () => {
                         onPress: handleCreateIngredientPress,
                     },
                     {
-                        disabled: true,
-                        hint: 'Připravujeme',
                         icon: 'barcode-scan',
                         label: 'Naskenovat kód',
+                        onPress: handleScanIngredientPress,
                     },
                 ]}
             />

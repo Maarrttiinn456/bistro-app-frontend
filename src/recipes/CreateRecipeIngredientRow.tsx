@@ -25,6 +25,7 @@ type CreateRecipeIngredientRowProps = {
     onCreateIngredient: (row: RecipeIngredientRow) => void;
     onFocus: (rowId: string) => void;
     onRemove: (rowId: string) => void;
+    onScan: (row: RecipeIngredientRow) => void;
     onSearchChange: (rowId: string, value: string) => void;
     onSelect: (rowId: string, ingredient: Ingredient) => void;
     onToggleDisplayAmount: (rowId: string) => void;
@@ -41,6 +42,7 @@ export const CreateRecipeIngredientRow = ({
     onCreateIngredient,
     onFocus,
     onRemove,
+    onScan,
     onSearchChange,
     onSelect,
     onToggleDisplayAmount,
@@ -78,6 +80,15 @@ export const CreateRecipeIngredientRow = ({
                         onFocus={() => onFocus(row.id)}
                         onChangeText={(value) => onSearchChange(row.id, value)}
                     />
+                    <Pressable
+                        accessibilityRole="button"
+                        style={styles.secondaryButton}
+                        onPress={() => onScan(row)}
+                    >
+                        <Text style={styles.secondaryButtonText}>
+                            Naskenovat kód
+                        </Text>
+                    </Pressable>
                     {row.selectedIngredient ? (
                         <View style={styles.selectedBox}>
                             <Text style={styles.selectedName} selectable>

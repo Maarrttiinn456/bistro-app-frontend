@@ -40,7 +40,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Bistro potrebuje pristup ke kamere pro skenovani carovych kodu."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

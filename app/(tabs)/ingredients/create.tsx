@@ -59,6 +59,7 @@ const getCreateIngredientErrorMessage = (error: unknown) => {
 
 const CreateIngredient = () => {
     const params = useLocalSearchParams<{
+        barcode?: string;
         name?: string;
         rowId?: string;
     }>();
@@ -67,6 +68,7 @@ const CreateIngredient = () => {
     const createIngredientMutation = useCreateIngredient();
     const [name, setName] = useState(getStringParam(params.name));
     const [brand, setBrand] = useState('');
+    const [barcode, setBarcode] = useState(getStringParam(params.barcode));
     const [baseUnit, setBaseUnit] = useState<CreateIngredientBodyBaseUnit>(
         CreateIngredientBodyBaseUnit.g,
     );
@@ -110,6 +112,7 @@ const CreateIngredient = () => {
             const response = await createIngredientMutation.mutateAsync({
                 data: {
                     baseUnit,
+                    barcode: toOptionalIngredientText(barcode),
                     brand: toOptionalIngredientText(brand),
                     carbsPer100: parsedCarbsPer100,
                     fatPer100: parsedFatPer100,
@@ -161,6 +164,14 @@ const CreateIngredient = () => {
                         style={styles.input}
                         value={brand}
                         onChangeText={setBrand}
+                    />
+                    <TextInput
+                        accessibilityLabel="Čárový kód nové suroviny"
+                        keyboardType="number-pad"
+                        placeholder="Čárový kód"
+                        style={styles.input}
+                        value={barcode}
+                        onChangeText={setBarcode}
                     />
                     <View style={styles.optionGrid}>
                         {[

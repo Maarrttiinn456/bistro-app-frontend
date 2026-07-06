@@ -53,6 +53,7 @@ const createRecipeMutateAsync = jest.fn<
 >();
 
 const ingredient: Ingredient = {
+    archivedAt: null,
     barcode: null,
     baseUnit: IngredientBaseUnit.g,
     brand: 'Bio farma',
@@ -289,6 +290,22 @@ describe('CreateRecipe', () => {
             pathname: '/ingredients/create',
             params: expect.objectContaining({
                 name: 'Tempeh',
+            }),
+        });
+    });
+
+    it('opens barcode scanner for the ingredient row', async () => {
+        const user = userEvent.setup();
+
+        await render(<CreateRecipe />);
+        await user.press(
+            screen.getByRole('button', { name: 'Naskenovat kód' }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/ingredients/scan',
+            params: expect.objectContaining({
+                rowId: expect.any(String),
             }),
         });
     });

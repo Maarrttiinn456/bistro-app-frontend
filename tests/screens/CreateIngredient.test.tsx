@@ -44,6 +44,7 @@ const createIngredientMutateAsync = jest.fn<
 >();
 
 const createdIngredient: Ingredient = {
+    archivedAt: null,
     barcode: null,
     baseUnit: IngredientBaseUnit.g,
     brand: null,
@@ -95,6 +96,17 @@ describe('CreateIngredient', () => {
         expect(screen.getByDisplayValue('Tempeh')).toBeOnTheScreen();
     });
 
+    it('prefills the barcode from route params', async () => {
+        mockSearchParams = {
+            barcode: '3017620422003',
+            name: 'Nutella',
+        };
+
+        await render(<CreateIngredient />);
+
+        expect(screen.getByDisplayValue('3017620422003')).toBeOnTheScreen();
+    });
+
     it('validates required macros before submit', async () => {
         const user = userEvent.setup();
 
@@ -115,6 +127,7 @@ describe('CreateIngredient', () => {
             expect(createIngredientMutateAsync).toHaveBeenCalledWith({
                 data: {
                     baseUnit: CreateIngredientBodyBaseUnit.g,
+                    barcode: null,
                     brand: null,
                     carbsPer100: 12,
                     fatPer100: 3,
@@ -153,6 +166,7 @@ describe('CreateIngredient', () => {
             expect(createIngredientMutateAsync).toHaveBeenCalledWith({
                 data: {
                     baseUnit: CreateIngredientBodyBaseUnit.g,
+                    barcode: null,
                     brand: null,
                     carbsPer100: 12,
                     fatPer100: 3,
@@ -167,6 +181,24 @@ describe('CreateIngredient', () => {
             queryKey: ['/v1/ingredients'],
         });
         expect(mockBack).toHaveBeenCalled();
+    });
+
+    it('sends a trimmed barcode when it is filled', async () => {
+        mockSearchParams = {
+            barcode: ' 3017620422003 ',
+            name: 'Nutella',
+        };
+
+        await render(<CreateIngredient />);
+        await fillValidMacrosAndSubmit();
+
+        await waitFor(() =>
+            expect(createIngredientMutateAsync).toHaveBeenCalledWith({
+                data: expect.objectContaining({
+                    barcode: '3017620422003',
+                }),
+            }),
+        );
     });
 
     it('shows the backend unauthorized error when create fails', async () => {

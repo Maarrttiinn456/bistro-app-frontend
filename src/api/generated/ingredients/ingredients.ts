@@ -29,7 +29,9 @@ import type {
   ErrorResponse,
   GetIngredientsParams,
   GetIngredientsResponse,
-  IngredientResponse
+  IngredientResponse,
+  ResolveIngredientBarcodeBody,
+  ResolveIngredientBarcodeResponse
 } from '../model';
 
 import { customInstance } from '../../mutator';
@@ -209,3 +211,127 @@ export function useGetIngredients<TData = Awaited<ReturnType<typeof getIngredien
 
 
 
+/**
+ * @summary Archive ingredient
+ */
+export const archiveIngredient = (
+    ingredientId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<IngredientResponse>(
+      {url: `/v1/ingredients/${ingredientId}/archive`, method: 'PATCH', signal
+    },
+      );
+    }
+
+
+
+export const getArchiveIngredientMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveIngredient>>, TError,{ingredientId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof archiveIngredient>>, TError,{ingredientId: string}, TContext> => {
+
+const mutationKey = ['archiveIngredient'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveIngredient>>, {ingredientId: string}> = (props) => {
+          const {ingredientId} = props ?? {};
+
+          return  archiveIngredient(ingredientId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveIngredientMutationResult = NonNullable<Awaited<ReturnType<typeof archiveIngredient>>>
+
+    export type ArchiveIngredientMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Archive ingredient
+ */
+export const useArchiveIngredient = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveIngredient>>, TError,{ingredientId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof archiveIngredient>>,
+        TError,
+        {ingredientId: string},
+        TContext
+      > => {
+      return useMutation(getArchiveIngredientMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Resolve ingredient by barcode
+ */
+export const resolveIngredientBarcode = (
+    resolveIngredientBarcodeBody: BodyType<ResolveIngredientBarcodeBody>,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ResolveIngredientBarcodeResponse>(
+      {url: `/v1/ingredients/barcode/resolve`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveIngredientBarcodeBody, signal
+    },
+      );
+    }
+
+
+
+export const getResolveIngredientBarcodeMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveIngredientBarcode>>, TError,{data: BodyType<ResolveIngredientBarcodeBody>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof resolveIngredientBarcode>>, TError,{data: BodyType<ResolveIngredientBarcodeBody>}, TContext> => {
+
+const mutationKey = ['resolveIngredientBarcode'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveIngredientBarcode>>, {data: BodyType<ResolveIngredientBarcodeBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  resolveIngredientBarcode(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolveIngredientBarcodeMutationResult = NonNullable<Awaited<ReturnType<typeof resolveIngredientBarcode>>>
+    export type ResolveIngredientBarcodeMutationBody = BodyType<ResolveIngredientBarcodeBody>
+    export type ResolveIngredientBarcodeMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Resolve ingredient by barcode
+ */
+export const useResolveIngredientBarcode = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveIngredientBarcode>>, TError,{data: BodyType<ResolveIngredientBarcodeBody>}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resolveIngredientBarcode>>,
+        TError,
+        {data: BodyType<ResolveIngredientBarcodeBody>},
+        TContext
+      > => {
+      return useMutation(getResolveIngredientBarcodeMutationOptions(options), queryClient);
+    }
