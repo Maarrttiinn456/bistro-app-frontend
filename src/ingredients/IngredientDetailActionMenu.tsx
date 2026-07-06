@@ -1,50 +1,39 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { type Href, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 
 import {
-    getGetRecipeQueryKey,
-    getGetRecipesQueryKey,
-    useDeleteRecipe,
-} from '@/src/api/generated/recipes/recipes';
+    getGetIngredientsQueryKey,
+    useArchiveIngredient,
+} from '@/src/api/generated/ingredients/ingredients';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
-import { useRouter } from 'expo-router';
 
-type RecipeDetailActionMenuProps = {
-    recipeId: string;
+type IngredientDetailActionMenuProps = {
+    ingredientId: string;
 };
 
-export const RecipeDetailActionMenu = ({
-    recipeId,
-}: RecipeDetailActionMenuProps) => {
-    const router = useRouter();
+export const IngredientDetailActionMenu = ({
+    ingredientId,
+}: IngredientDetailActionMenuProps) => {
     const queryClient = useQueryClient();
-    const deleteRecipeMutation = useDeleteRecipe();
-
-    const handleEditPress = () => {
-        router.push({
-            pathname: '/recipes/[recipeId]/edit',
-            params: { recipeId },
-        });
-    };
+    const router = useRouter();
+    const archiveIngredientMutation = useArchiveIngredient();
 
     const handleDeleteConfirm = async () => {
         try {
-            await deleteRecipeMutation.mutateAsync({ recipeId });
+            await archiveIngredientMutation.mutateAsync({ ingredientId });
             await queryClient.invalidateQueries({
-                queryKey: getGetRecipesQueryKey(),
+                queryKey: getGetIngredientsQueryKey(),
             });
-            queryClient.removeQueries({
-                queryKey: getGetRecipeQueryKey(recipeId),
-            });
-            router.replace('/recipes');
+            router.replace('/ingredients' as Href);
         } catch {
-            Alert.alert('Recept se nepovedlo smazat.');
+            Alert.alert('Ingredienci se nepovedlo smazat.');
         }
     };
 
     const handleDeletePress = () => {
         Alert.alert(
-            'Smazat recept?',
+            'Smazat ingredienci?',
             'Tahle akce nejde vrátit zpět.',
             [
                 {
@@ -64,20 +53,23 @@ export const RecipeDetailActionMenu = ({
 
     return (
         <FloatingActionMenu
-            accessibilityLabel="Akce receptu"
+            accessibilityLabel="Akce ingredience"
             closedIcon="dots-horizontal"
             items={[
                 {
+                    disabled: true,
+                    hint: 'Připravujeme',
                     icon: 'pencil',
-                    label: 'Upravit recept',
-                    onPress: handleEditPress,
+                    label: 'Upravit ingredienci',
                 },
                 {
                     destructive: true,
-                    disabled: deleteRecipeMutation.isPending,
-                    hint: deleteRecipeMutation.isPending ? 'Mažu...' : undefined,
+                    disabled: archiveIngredientMutation.isPending,
+                    hint: archiveIngredientMutation.isPending
+                        ? 'Mažu...'
+                        : undefined,
                     icon: 'trash-can-outline',
-                    label: 'Smazat recept',
+                    label: 'Smazat ingredienci',
                     onPress: handleDeletePress,
                 },
             ]}

@@ -44,6 +44,20 @@ const TabLayout = () => {
                 }}
             />
             <Tabs.Screen
+                name="ingredients"
+                options={{
+                    headerShown: false,
+                    title: 'Ingredience',
+                    tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcons
+                            color={color}
+                            name="food-apple"
+                            size={size}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
                 name="meal-plan"
                 options={{
                     title: 'Plán',

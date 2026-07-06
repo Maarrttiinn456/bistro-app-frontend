@@ -1,13 +1,22 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import RecipeEditScreen from '@/app/(tabs)/recipes/[recipeId]/edit';
 import RecipeDetailScreen from '@/app/(tabs)/recipes/[recipeId]';
 import type { RecipeDetail } from '@/src/api/generated/model';
 import { MealSlot } from '@/src/api/generated/model';
-import { useGetRecipe } from '@/src/api/generated/recipes/recipes';
+import {
+    getGetRecipeQueryKey,
+    getGetRecipesQueryKey,
+    useDeleteRecipe,
+    useGetRecipe,
+} from '@/src/api/generated/recipes/recipes';
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockInvalidateQueries = jest.fn();
+const mockRemoveQueries = jest.fn();
 
 jest.mock('expo-router', () => ({
     useLocalSearchParams: () => ({
@@ -15,16 +24,35 @@ jest.mock('expo-router', () => ({
     }),
     useRouter: () => ({
         push: mockPush,
+        replace: mockReplace,
+    }),
+}));
+
+jest.mock('@tanstack/react-query', () => ({
+    useQueryClient: () => ({
+        invalidateQueries: mockInvalidateQueries,
+        removeQueries: mockRemoveQueries,
     }),
 }));
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
 jest.mock('@/src/api/generated/recipes/recipes', () => ({
+    getGetRecipeQueryKey: jest.fn((recipeId: string) => [
+        `/v1/recipes/${recipeId}`,
+    ]),
+    getGetRecipesQueryKey: jest.fn(() => ['/v1/recipes']),
+    useDeleteRecipe: jest.fn(),
     useGetRecipe: jest.fn(),
 }));
 
 const mockedUseGetRecipe = jest.mocked(useGetRecipe);
+const mockedUseDeleteRecipe = jest.mocked(useDeleteRecipe);
+const mockedGetGetRecipeQueryKey = jest.mocked(getGetRecipeQueryKey);
+const mockedGetGetRecipesQueryKey = jest.mocked(getGetRecipesQueryKey);
+const mockDeleteRecipeMutateAsync = jest.fn<
+    (_variables: { recipeId: string }) => Promise<{ success: boolean }>
+>();
 
 const recipeDetail: RecipeDetail = {
     createdAt: '2026-06-30T10:00:00.000Z',
@@ -77,10 +105,23 @@ const mockRecipeQuery = (
     } as ReturnType<typeof useGetRecipe>);
 };
 
+const mockDeleteRecipeMutation = (
+    overrides: Partial<ReturnType<typeof useDeleteRecipe>> = {},
+) => {
+    mockDeleteRecipeMutateAsync.mockResolvedValue({ success: true });
+    mockedUseDeleteRecipe.mockReturnValue({
+        isPending: false,
+        mutateAsync: mockDeleteRecipeMutateAsync,
+        ...overrides,
+    } as unknown as ReturnType<typeof useDeleteRecipe>);
+};
+
 describe('RecipeDetailScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
         mockRecipeQuery();
+        mockDeleteRecipeMutation();
     });
 
     it('loads the recipe detail by route id', async () => {
@@ -179,6 +220,90 @@ describe('RecipeDetailScreen', () => {
             pathname: '/recipes/[recipeId]/edit',
             params: { recipeId: 'recipe-1' },
         });
+    });
+
+    it('opens a confirmation alert before deleting the recipe', async () => {
+        const user = userEvent.setup();
+        mockRecipeQuery({ data: { recipe: recipeDetail } });
+
+        await render(<RecipeDetailScreen />);
+        await user.press(screen.getByRole('button', { name: 'Akce receptu' }));
+        await user.press(
+            screen.getByRole('button', { name: /Smazat recept/ }),
+        );
+
+        expect(Alert.alert).toHaveBeenCalledWith(
+            'Smazat recept?',
+            'Tahle akce nejde vrátit zpět.',
+            expect.arrayContaining([
+                expect.objectContaining({
+                    style: 'cancel',
+                    text: 'Zrušit',
+                }),
+                expect.objectContaining({
+                    style: 'destructive',
+                    text: 'Smazat',
+                }),
+            ]),
+        );
+        expect(mockDeleteRecipeMutateAsync).not.toHaveBeenCalled();
+    });
+
+    it('deletes the recipe after confirmation and returns to recipes', async () => {
+        const user = userEvent.setup();
+        mockRecipeQuery({ data: { recipe: recipeDetail } });
+
+        await render(<RecipeDetailScreen />);
+        await user.press(screen.getByRole('button', { name: 'Akce receptu' }));
+        await user.press(
+            screen.getByRole('button', { name: /Smazat recept/ }),
+        );
+
+        const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2] as {
+            onPress?: () => void;
+            text: string;
+        }[];
+        alertButtons.find((button) => button.text === 'Smazat')?.onPress?.();
+
+        await waitFor(() => {
+            expect(mockDeleteRecipeMutateAsync).toHaveBeenCalledWith({
+                recipeId: 'recipe-1',
+            });
+        });
+        expect(mockedGetGetRecipesQueryKey).toHaveBeenCalledWith();
+        expect(mockInvalidateQueries).toHaveBeenCalledWith({
+            queryKey: ['/v1/recipes'],
+        });
+        expect(mockedGetGetRecipeQueryKey).toHaveBeenCalledWith('recipe-1');
+        expect(mockRemoveQueries).toHaveBeenCalledWith({
+            queryKey: ['/v1/recipes/recipe-1'],
+        });
+        expect(mockReplace).toHaveBeenCalledWith('/recipes');
+    });
+
+    it('shows an error alert when recipe delete fails', async () => {
+        const user = userEvent.setup();
+        mockRecipeQuery({ data: { recipe: recipeDetail } });
+        mockDeleteRecipeMutateAsync.mockRejectedValue(new Error('Delete failed'));
+
+        await render(<RecipeDetailScreen />);
+        await user.press(screen.getByRole('button', { name: 'Akce receptu' }));
+        await user.press(
+            screen.getByRole('button', { name: /Smazat recept/ }),
+        );
+
+        const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2] as {
+            onPress?: () => void;
+            text: string;
+        }[];
+        alertButtons.find((button) => button.text === 'Smazat')?.onPress?.();
+
+        await waitFor(() => {
+            expect(Alert.alert).toHaveBeenCalledWith(
+                'Recept se nepovedlo smazat.',
+            );
+        });
+        expect(mockReplace).not.toHaveBeenCalled();
     });
 });
 

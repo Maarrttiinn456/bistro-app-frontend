@@ -27,6 +27,8 @@ Pravidla pro spolupraci s agentem v tomhle projektu.
 
 ## Testovani
 
+- Ke kazde nove nebo zmenene funkcionalite pridej odpovidajici test.
+- Pokud opravujes bug, nejdriv se pokus pridat nebo upravit test, ktery bug reprodukuje a po oprave projde.
 - Testy pis behavior-first pres React Native Testing Library.
 - Testuj verejne chovani a kriticke stavy, ne implementacni detaily.
 - Netestuj `src/api/generated/`, styly, barvy, layout pixely ani cele obrazovky pres snapshoty.

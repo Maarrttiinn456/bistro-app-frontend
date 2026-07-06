@@ -8,6 +8,8 @@
 
 export * from './authContext';
 export * from './createFoodLogBody';
+export * from './createIngredientBody';
+export * from './createIngredientBodyBaseUnit';
 export * from './createMealPlanSlotBody';
 export * from './createRecipeBody';
 export * from './dailyTotal';
@@ -39,6 +41,7 @@ export * from './householdMembership';
 export * from './householdMembershipRole';
 export * from './ingredient';
 export * from './ingredientBaseUnit';
+export * from './ingredientResponse';
 export * from './loginBody';
 export * from './logoutResponse';
 export * from './macro';
@@ -63,6 +66,9 @@ export * from './recipeDetailResponse';
 export * from './recipeIngredient';
 export * from './recipeIngredientInput';
 export * from './refreshBody';
+export * from './resolveIngredientBarcodeBody';
+export * from './resolveIngredientBarcodeResponse';
+export * from './resolveIngredientBarcodeResponseSource';
 export * from './session';
 export * from './signUpBody';
 export * from './statsDailyResponse';
