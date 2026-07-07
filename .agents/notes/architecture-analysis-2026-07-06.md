@@ -1,7 +1,16 @@
 # Architecture analysis - current state
 
 Datum: 2026-07-06
-Stav: zapis z architektonicke analyzy, neni zavazne pravidlo
+Stav: zpracovano
+
+Zpracovano: 2026-07-06
+
+Poznamka k uzavreni:
+
+- Posledni otevreny bod byl detail ingredience. Frontend klient byl
+  pregenerovany z aktualniho backend OpenAPI kontraktu a
+  `src/ingredients/useIngredientDetail.ts` pouziva detailovy
+  `useGetIngredient` endpoint misto lookupu v seznamu.
 
 ## Kontext
 
@@ -113,33 +122,39 @@ Riziko zmeny:
 
 - Stredni.
 
-### 3. Ingredient detail nema vlastni detailovy datovy seam
+### 3. Ingredient detail ma docasny detailovy datovy seam
 
 Soubory:
 
 - `app/(tabs)/ingredients/[ingredientId].tsx`
+- `src/ingredients/useIngredientDetail.ts`
 
 Problem:
 
-Detail vola `useGetIngredients({ scope: all })` a hleda jednu ingredienci v
-seznamu. To je zatim funkcni, ale dlouhodobe krehke, pokud seznam poroste nebo
-se list/detail kontrakty zacnou lisit.
+Detail screen uz je obaleny pres `useIngredientDetail`, ale hook uvnitr stale
+vola `useGetIngredients({ scope: all })` a hleda jednu ingredienci v seznamu.
+Backend uz ma `GET /ingredients/:ingredientId` s `operationId: getIngredient`,
+takze list lookup je jen docasna frontend implementace.
 
 Navrh:
 
-- Kratkodobe zavest `src/ingredients/useIngredientDetail.ts`, ktery schova
-  soucasnou implementaci.
-- Dlouhodobe zvazit backend endpoint `GET /ingredients/:id` a Orval hook.
+- Aktualizovat frontend OpenAPI kontrakt a regenerovat Orval klienta.
+- Prepnout `src/ingredients/useIngredientDetail.ts` na vygenerovany
+  `getIngredient` / `useGetIngredient`.
+- Screen nechat zavisly na `useIngredientDetail`, aby se nemusel pri API zmene
+  znovu prepisovat.
 
 Dopad:
 
-- Detail screen bude mene zavisly na list response.
-- Snazsi budoucni prechod na detail endpoint bez prepisu obrazovky.
+- Detail screen nebude tahat cely seznam kvuli jedne surovine.
+- Frontend vyuzije backendove 404 chovani pro cizi, neexistujici nebo
+  archivovanou surovinu.
+- Zachova se lokalni frontend seam pro detail.
 
 Riziko zmeny:
 
-- Nizke u wrapper hooku.
-- Stredni u backend/API zmeny.
+- Nizke az stredni. Hlavni riziko je sladit regenerovany Orval vystup,
+  query key a loading/error stavy detailu.
 
 ### 4. Handoff mezi recipe flow a ingredient flow je rozprostreny
 
@@ -292,9 +307,9 @@ Smazat:
 2. Vytahnout pure `buildCreateIngredientBody` a error mapping pro create
    ingredient flow.
 3. Vytahnout `useCreateIngredientForm`.
-4. Obalit ingredient detail do `useIngredientDetail`, zatim bez backend zmeny.
+4. Aktualizovat OpenAPI/Orval a prepnout `useIngredientDetail` na detailovy
+   `getIngredient` / `useGetIngredient`.
 5. Vytahnout barcode scan workflow do `useIngredientBarcodeScan`.
-6. Az potom resit vetsi backend/API zmenu typu detail endpointu pro ingredienci.
 
 ## Doporučene navazani v dalsi session
 
@@ -307,4 +322,3 @@ Nejvetsi architektonicky prinos bude mit:
 
 - `useIngredientBarcodeScan`
 - `useCreateIngredientForm`
-

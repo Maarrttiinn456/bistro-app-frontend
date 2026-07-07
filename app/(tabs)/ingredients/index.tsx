@@ -3,6 +3,7 @@ import { GetIngredientsScope } from '@/src/api/generated/model';
 import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
 import { Screen } from '@/src/components/Screen';
+import { formatIngredientNutritionPer100 } from '@/src/ingredients/ingredientFormatters';
 import { useRouter } from 'expo-router';
 import {
     ActivityIndicator,
@@ -12,10 +13,6 @@ import {
     Text,
     View,
 } from 'react-native';
-
-const formatNutritionPer100 = (ingredient: Ingredient) => {
-    return `Na 100 ${ingredient.baseUnit}: ${ingredient.kcalPer100} kcal · B ${ingredient.proteinPer100}g · S ${ingredient.carbsPer100}g · T ${ingredient.fatPer100}g`;
-};
 
 const IngredientListItem = ({
     ingredient,
@@ -39,7 +36,7 @@ const IngredientListItem = ({
                 Jednotka: {ingredient.baseUnit}
             </Text>
             <Text style={styles.ingredientNutrition}>
-                {formatNutritionPer100(ingredient)}
+                {formatIngredientNutritionPer100(ingredient)}
             </Text>
         </Pressable>
     );

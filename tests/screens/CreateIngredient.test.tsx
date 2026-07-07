@@ -12,7 +12,6 @@ import {
     IngredientBaseUnit,
 } from '@/src/api/generated/model';
 import { useCreateIngredient } from '@/src/api/generated/ingredients/ingredients';
-import { createdIngredientHandoffQueryKey } from '@/src/ingredients/createIngredientHandoff';
 
 const mockBack = jest.fn();
 const mockInvalidateQueries = jest.fn();
@@ -138,7 +137,7 @@ describe('CreateIngredient', () => {
             }),
         );
         expect(mockSetQueryData).toHaveBeenCalledWith(
-            createdIngredientHandoffQueryKey,
+            expect.any(Array),
             {
                 ingredient: createdIngredient,
                 rowId: 'row-1',

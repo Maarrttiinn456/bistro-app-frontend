@@ -1,8 +1,10 @@
-import type { Ingredient } from '@/src/api/generated/model';
-import { GetIngredientsScope } from '@/src/api/generated/model';
-import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import { Screen } from '@/src/components/Screen';
 import { IngredientDetailActionMenu } from '@/src/ingredients/IngredientDetailActionMenu';
+import {
+    formatIngredientMacroValue,
+    ingredientMacroItems,
+} from '@/src/ingredients/ingredientFormatters';
+import { useIngredientDetail } from '@/src/ingredients/useIngredientDetail';
 import { useLocalSearchParams } from 'expo-router';
 import {
     ActivityIndicator,
@@ -12,38 +14,10 @@ import {
     View,
 } from 'react-native';
 
-type IngredientMacroKey =
-    | 'kcalPer100'
-    | 'proteinPer100'
-    | 'carbsPer100'
-    | 'fatPer100';
-
-const macroItems: {
-    key: IngredientMacroKey;
-    label: string;
-    unit: string;
-}[] = [
-    { key: 'kcalPer100', label: 'kcal', unit: '' },
-    { key: 'proteinPer100', label: 'Bílkoviny', unit: 'g' },
-    { key: 'carbsPer100', label: 'Sacharidy', unit: 'g' },
-    { key: 'fatPer100', label: 'Tuky', unit: 'g' },
-];
-
 const normalizeIngredientId = (
     ingredientId: string | string[] | undefined,
 ) => {
     return Array.isArray(ingredientId) ? ingredientId[0] : ingredientId;
-};
-
-const formatIngredientNumber = (value: number) => {
-    return Number(value.toFixed(1)).toString();
-};
-
-const getIngredientMacroValue = (
-    ingredient: Ingredient,
-    key: IngredientMacroKey,
-) => {
-    return formatIngredientNumber(ingredient[key]);
 };
 
 const IngredientDetailScreen = () => {
@@ -51,9 +25,7 @@ const IngredientDetailScreen = () => {
         ingredientId?: string | string[];
     }>();
     const ingredientId = normalizeIngredientId(ingredientIdParam) ?? '';
-    const { data, isError, isLoading } = useGetIngredients({
-        scope: GetIngredientsScope.all,
-    });
+    const { ingredient, isError, isLoading } = useIngredientDetail(ingredientId);
 
     if (isLoading) {
         return (
@@ -70,10 +42,6 @@ const IngredientDetailScreen = () => {
             </Screen>
         );
     }
-
-    const ingredient = data?.ingredients.find(
-        (currentIngredient) => currentIngredient.id === ingredientId,
-    );
 
     if (isError || ingredient === undefined) {
         return (
@@ -113,10 +81,10 @@ const IngredientDetailScreen = () => {
                         Nutriční hodnoty na 100 {ingredient.baseUnit}
                     </Text>
                     <View style={styles.macroGrid}>
-                        {macroItems.map((macroItem) => (
+                        {ingredientMacroItems.map((macroItem) => (
                             <View key={macroItem.key} style={styles.macroItem}>
                                 <Text style={styles.macroValue}>
-                                    {getIngredientMacroValue(
+                                    {formatIngredientMacroValue(
                                         ingredient,
                                         macroItem.key,
                                     )}

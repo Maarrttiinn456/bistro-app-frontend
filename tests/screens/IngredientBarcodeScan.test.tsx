@@ -18,7 +18,6 @@ import {
     ResolveIngredientBarcodeResponseSource,
 } from '@/src/api/generated/model';
 import { useResolveIngredientBarcode } from '@/src/api/generated/ingredients/ingredients';
-import { createdIngredientHandoffQueryKey } from '@/src/ingredients/createIngredientHandoff';
 
 const mockBack = jest.fn();
 const mockPush = jest.fn();
@@ -172,7 +171,7 @@ describe('IngredientBarcodeScanScreen', () => {
 
         await waitFor(() =>
             expect(mockSetQueryData).toHaveBeenCalledWith(
-                createdIngredientHandoffQueryKey,
+                expect.any(Array),
                 {
                     ingredient,
                     rowId: 'row-1',

@@ -11,10 +11,7 @@ import {
     getGetRecipesQueryKey,
     useCreateRecipe,
 } from '@/src/api/generated/recipes/recipes';
-import {
-    createdIngredientHandoffQueryKey,
-    type CreatedIngredientHandoff,
-} from '@/src/ingredients/createIngredientHandoff';
+import { consumeCreatedIngredientHandoff } from '@/src/ingredients/createIngredientHandoff';
 import {
     buildCreateRecipeBody,
     calculateMacroTotals,
@@ -104,17 +101,13 @@ export const useCreateRecipeForm = ({
 
     useFocusEffect(
         useCallback(() => {
-            const handoff =
-                queryClient.getQueryData<CreatedIngredientHandoff | null>(
-                    createdIngredientHandoffQueryKey,
-                );
+            const handoff = consumeCreatedIngredientHandoff(queryClient);
 
-            if (handoff === undefined || handoff === null) {
+            if (handoff === null) {
                 return;
             }
 
             handleIngredientSelect(handoff.rowId, handoff.ingredient);
-            queryClient.setQueryData(createdIngredientHandoffQueryKey, null);
         }, [handleIngredientSelect, queryClient]),
     );
 

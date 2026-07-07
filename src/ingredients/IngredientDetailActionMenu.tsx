@@ -3,6 +3,7 @@ import { type Href, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 
 import {
+    getGetIngredientQueryKey,
     getGetIngredientsQueryKey,
     useArchiveIngredient,
 } from '@/src/api/generated/ingredients/ingredients';
@@ -24,6 +25,9 @@ export const IngredientDetailActionMenu = ({
             await archiveIngredientMutation.mutateAsync({ ingredientId });
             await queryClient.invalidateQueries({
                 queryKey: getGetIngredientsQueryKey(),
+            });
+            queryClient.removeQueries({
+                queryKey: getGetIngredientQueryKey(ingredientId),
             });
             router.replace('/ingredients' as Href);
         } catch {

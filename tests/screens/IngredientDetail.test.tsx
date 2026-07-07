@@ -4,18 +4,17 @@ import { Alert } from 'react-native';
 
 import IngredientDetailScreen from '@/app/(tabs)/ingredients/[ingredientId]';
 import type { Ingredient } from '@/src/api/generated/model';
+import { IngredientBaseUnit } from '@/src/api/generated/model';
 import {
-    GetIngredientsScope,
-    IngredientBaseUnit,
-} from '@/src/api/generated/model';
-import {
+    getGetIngredientQueryKey,
     getGetIngredientsQueryKey,
     useArchiveIngredient,
-    useGetIngredients,
+    useGetIngredient,
 } from '@/src/api/generated/ingredients/ingredients';
 
 const mockReplace = jest.fn();
 const mockInvalidateQueries = jest.fn();
+const mockRemoveQueries = jest.fn();
 
 jest.mock('expo-router', () => ({
     useLocalSearchParams: () => ({
@@ -29,19 +28,24 @@ jest.mock('expo-router', () => ({
 jest.mock('@tanstack/react-query', () => ({
     useQueryClient: () => ({
         invalidateQueries: mockInvalidateQueries,
+        removeQueries: mockRemoveQueries,
     }),
 }));
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
 jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
+    getGetIngredientQueryKey: jest.fn((ingredientId: string) => [
+        `/v1/ingredients/${ingredientId}`,
+    ]),
     getGetIngredientsQueryKey: jest.fn(() => ['/v1/ingredients']),
     useArchiveIngredient: jest.fn(),
-    useGetIngredients: jest.fn(),
+    useGetIngredient: jest.fn(),
 }));
 
-const mockedUseGetIngredients = jest.mocked(useGetIngredients);
+const mockedUseGetIngredient = jest.mocked(useGetIngredient);
 const mockedUseArchiveIngredient = jest.mocked(useArchiveIngredient);
+const mockedGetGetIngredientQueryKey = jest.mocked(getGetIngredientQueryKey);
 const mockedGetGetIngredientsQueryKey = jest.mocked(getGetIngredientsQueryKey);
 const mockArchiveIngredientMutateAsync = jest.fn<
     (_variables: { ingredientId: string }) => Promise<unknown>
@@ -64,15 +68,15 @@ const ingredient: Ingredient = {
     servingLabel: '1 kus',
 };
 
-const mockIngredientsQuery = (
-    overrides: Partial<ReturnType<typeof useGetIngredients>> = {},
+const mockIngredientQuery = (
+    overrides: Partial<ReturnType<typeof useGetIngredient>> = {},
 ) => {
-    mockedUseGetIngredients.mockReturnValue({
+    mockedUseGetIngredient.mockReturnValue({
         data: undefined,
         isError: false,
         isLoading: false,
         ...overrides,
-    } as ReturnType<typeof useGetIngredients>);
+    } as ReturnType<typeof useGetIngredient>);
 };
 
 const mockArchiveIngredientMutation = (
@@ -92,18 +96,16 @@ describe('IngredientDetailScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
-        mockIngredientsQuery();
+        mockIngredientQuery();
         mockArchiveIngredientMutation();
     });
 
-    it('loads ingredients for the detail route id', async () => {
-        mockIngredientsQuery({ isLoading: true });
+    it('loads the ingredient detail by route id', async () => {
+        mockIngredientQuery({ isLoading: true });
 
         await render(<IngredientDetailScreen />);
 
-        expect(mockedUseGetIngredients).toHaveBeenCalledWith({
-            scope: GetIngredientsScope.all,
-        });
+        expect(mockedUseGetIngredient).toHaveBeenCalledWith('ingredient-1');
         expect(
             screen.getByTestId('ingredient-detail-loading-indicator'),
         ).toBeOnTheScreen();
@@ -113,7 +115,7 @@ describe('IngredientDetailScreen', () => {
     });
 
     it('shows an error state when the ingredient cannot be loaded', async () => {
-        mockIngredientsQuery({ isError: true });
+        mockIngredientQuery({ isError: true });
 
         await render(<IngredientDetailScreen />);
 
@@ -123,7 +125,7 @@ describe('IngredientDetailScreen', () => {
     });
 
     it('shows ingredient metadata, macros and serving', async () => {
-        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+        mockIngredientQuery({ data: { ingredient } });
 
         await render(<IngredientDetailScreen />);
 
@@ -140,15 +142,13 @@ describe('IngredientDetailScreen', () => {
     });
 
     it('shows a serving fallback', async () => {
-        mockIngredientsQuery({
+        mockIngredientQuery({
             data: {
-                ingredients: [
-                    {
-                        ...ingredient,
-                        servingGrams: null,
-                        servingLabel: null,
-                    },
-                ],
+                ingredient: {
+                    ...ingredient,
+                    servingGrams: null,
+                    servingLabel: null,
+                },
             },
         });
 
@@ -159,7 +159,7 @@ describe('IngredientDetailScreen', () => {
 
     it('opens ingredient actions from the floating action button', async () => {
         const user = userEvent.setup();
-        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+        mockIngredientQuery({ data: { ingredient } });
 
         await render(<IngredientDetailScreen />);
         await user.press(
@@ -177,7 +177,7 @@ describe('IngredientDetailScreen', () => {
 
     it('opens a confirmation alert before deleting the ingredient', async () => {
         const user = userEvent.setup();
-        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+        mockIngredientQuery({ data: { ingredient } });
 
         await render(<IngredientDetailScreen />);
         await user.press(
@@ -206,7 +206,7 @@ describe('IngredientDetailScreen', () => {
 
     it('deletes the ingredient after confirmation and returns to ingredients', async () => {
         const user = userEvent.setup();
-        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+        mockIngredientQuery({ data: { ingredient } });
 
         await render(<IngredientDetailScreen />);
         await user.press(
@@ -231,12 +231,18 @@ describe('IngredientDetailScreen', () => {
         expect(mockInvalidateQueries).toHaveBeenCalledWith({
             queryKey: ['/v1/ingredients'],
         });
+        expect(mockedGetGetIngredientQueryKey).toHaveBeenCalledWith(
+            'ingredient-1',
+        );
+        expect(mockRemoveQueries).toHaveBeenCalledWith({
+            queryKey: ['/v1/ingredients/ingredient-1'],
+        });
         expect(mockReplace).toHaveBeenCalledWith('/ingredients');
     });
 
     it('shows an error alert when ingredient delete fails', async () => {
         const user = userEvent.setup();
-        mockIngredientsQuery({ data: { ingredients: [ingredient] } });
+        mockIngredientQuery({ data: { ingredient } });
         mockArchiveIngredientMutateAsync.mockRejectedValue(
             new Error('Delete failed'),
         );
