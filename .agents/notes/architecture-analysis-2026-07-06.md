@@ -1,7 +1,16 @@
 # Architecture analysis - current state
 
 Datum: 2026-07-06
-Stav: zapis z architektonicke analyzy, neni zavazne pravidlo
+Stav: zpracovano
+
+Zpracovano: 2026-07-06
+
+Poznamka k uzavreni:
+
+- Posledni otevreny bod byl detail ingredience. Frontend klient byl
+  pregenerovany z aktualniho backend OpenAPI kontraktu a
+  `src/ingredients/useIngredientDetail.ts` pouziva detailovy
+  `useGetIngredient` endpoint misto lookupu v seznamu.
 
 ## Kontext
 

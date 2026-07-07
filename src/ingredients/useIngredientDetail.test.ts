@@ -1,11 +1,19 @@
-import { describe, expect, it } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { renderHook } from '@testing-library/react-native';
 
+import { useGetIngredient } from '@/src/api/generated/ingredients/ingredients';
 import type { Ingredient } from '@/src/api/generated/model';
 import { IngredientBaseUnit } from '@/src/api/generated/model';
 
-import { selectIngredientById } from './useIngredientDetail';
+import { useIngredientDetail } from './useIngredientDetail';
 
-const tomato: Ingredient = {
+jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
+    useGetIngredient: jest.fn(),
+}));
+
+const mockedUseGetIngredient = jest.mocked(useGetIngredient);
+
+const ingredient: Ingredient = {
     archivedAt: null,
     barcode: null,
     baseUnit: IngredientBaseUnit.g,
@@ -22,21 +30,41 @@ const tomato: Ingredient = {
     servingLabel: null,
 };
 
-const rice: Ingredient = {
-    ...tomato,
-    id: 'ingredient-2',
-    name: 'Rice',
+const mockIngredientQuery = (
+    overrides: Partial<ReturnType<typeof useGetIngredient>> = {},
+) => {
+    mockedUseGetIngredient.mockReturnValue({
+        data: undefined,
+        isError: false,
+        isLoading: false,
+        ...overrides,
+    } as ReturnType<typeof useGetIngredient>);
 };
 
 describe('useIngredientDetail', () => {
-    it('selects an ingredient by id from the current list response', () => {
-        expect(selectIngredientById([tomato, rice], 'ingredient-2')).toBe(
-            rice,
-        );
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    it('returns undefined when the list or ingredient is missing', () => {
-        expect(selectIngredientById(undefined, 'ingredient-1')).toBeUndefined();
-        expect(selectIngredientById([tomato], 'missing')).toBeUndefined();
+    it('loads ingredient detail by id', async () => {
+        mockIngredientQuery({ data: { ingredient } });
+
+        const { result } = await renderHook(() =>
+            useIngredientDetail('ingredient-1'),
+        );
+
+        expect(mockedUseGetIngredient).toHaveBeenCalledWith('ingredient-1');
+        expect(result.current.ingredient).toBe(ingredient);
+    });
+
+    it('keeps ingredient empty while the detail response is missing', async () => {
+        mockIngredientQuery({ isLoading: true });
+
+        const { result } = await renderHook(() =>
+            useIngredientDetail('ingredient-1'),
+        );
+
+        expect(result.current.ingredient).toBeUndefined();
+        expect(result.current.isLoading).toBe(true);
     });
 });

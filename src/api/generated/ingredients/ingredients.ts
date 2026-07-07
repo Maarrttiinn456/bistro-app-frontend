@@ -335,3 +335,95 @@ export const useResolveIngredientBarcode = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getResolveIngredientBarcodeMutationOptions(options), queryClient);
     }
+    /**
+ * @summary Get ingredient detail
+ */
+export const getIngredient = (
+    ingredientId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<IngredientResponse>(
+      {url: `/v1/ingredients/${ingredientId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetIngredientQueryKey = (ingredientId: string,) => {
+    return [
+    `/v1/ingredients/${ingredientId}`
+    ] as const;
+    }
+
+
+export const getGetIngredientQueryOptions = <TData = Awaited<ReturnType<typeof getIngredient>>, TError = ErrorType<ErrorResponse>>(ingredientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetIngredientQueryKey(ingredientId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIngredient>>> = ({ signal }) => getIngredient(ingredientId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: ingredientId !== null && ingredientId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetIngredientQueryResult = NonNullable<Awaited<ReturnType<typeof getIngredient>>>
+export type GetIngredientQueryError = ErrorType<ErrorResponse>
+
+
+export function useGetIngredient<TData = Awaited<ReturnType<typeof getIngredient>>, TError = ErrorType<ErrorResponse>>(
+ ingredientId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getIngredient>>,
+          TError,
+          Awaited<ReturnType<typeof getIngredient>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetIngredient<TData = Awaited<ReturnType<typeof getIngredient>>, TError = ErrorType<ErrorResponse>>(
+ ingredientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getIngredient>>,
+          TError,
+          Awaited<ReturnType<typeof getIngredient>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetIngredient<TData = Awaited<ReturnType<typeof getIngredient>>, TError = ErrorType<ErrorResponse>>(
+ ingredientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get ingredient detail
+ */
+
+export function useGetIngredient<TData = Awaited<ReturnType<typeof getIngredient>>, TError = ErrorType<ErrorResponse>>(
+ ingredientId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIngredient>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetIngredientQueryOptions(ingredientId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
