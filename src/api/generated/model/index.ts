@@ -75,6 +75,8 @@ export * from './statsDailyResponse';
 export * from './statsSummaryResponse';
 export * from './updateFoodLogBody';
 export * from './updateFoodLogResponse';
+export * from './updateIngredientBody';
+export * from './updateIngredientBodyBaseUnit';
 export * from './updateMealPlanSlotBody';
 export * from './updateMealPlanSlotIngredientsBody';
 export * from './updateProfileBody';

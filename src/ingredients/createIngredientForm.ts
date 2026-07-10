@@ -88,9 +88,10 @@ export const buildCreateIngredientBody = (
     };
 };
 
-export const getCreateIngredientErrorMessage = (error: unknown) => {
-    const fallbackMessage = 'Surovinu se nepovedlo vytvořit.';
-
+const getIngredientFormErrorMessage = (
+    error: unknown,
+    fallbackMessage: string,
+) => {
     if (typeof error !== 'object' || error === null) {
         return fallbackMessage;
     }
@@ -106,4 +107,18 @@ export const getCreateIngredientErrorMessage = (error: unknown) => {
     return status
         ? `${fallbackMessage} (HTTP ${status})`
         : fallbackMessage;
+};
+
+export const getCreateIngredientErrorMessage = (error: unknown) => {
+    return getIngredientFormErrorMessage(
+        error,
+        'Surovinu se nepovedlo vytvořit.',
+    );
+};
+
+export const getUpdateIngredientErrorMessage = (error: unknown) => {
+    return getIngredientFormErrorMessage(
+        error,
+        'Surovinu se nepovedlo uložit.',
+    );
 };

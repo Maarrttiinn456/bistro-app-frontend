@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import type { Ingredient } from '@/src/api/generated/model';
+import { ModalHeader } from '@/src/components/ModalHeader';
 import { formatIngredientMacros } from '@/src/recipes/createRecipeForm';
 
 type CreateRecipeIngredientPickerProps = {
@@ -46,22 +47,12 @@ export const CreateRecipeIngredientPicker = ({
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <View style={styles.headerText}>
-                    <Text style={styles.title}>Přidat surovinu</Text>
-                    <Text style={styles.subtitle}>
-                        Vyber z uložených surovin.
-                    </Text>
-                </View>
-                <Pressable
-                    accessibilityLabel="Zavřít výběr suroviny"
-                    accessibilityRole="button"
-                    style={styles.closeButton}
-                    onPress={onClose}
-                >
-                    <Text style={styles.closeButtonText}>Zavřít</Text>
-                </Pressable>
-            </View>
+            <ModalHeader
+                closeAccessibilityLabel="Zavřít výběr suroviny"
+                subtitle="Vyber z uložených surovin."
+                title="Přidat surovinu"
+                onClose={onClose}
+            />
 
             <TextInput
                 accessibilityLabel="Vyhledat surovinu"
@@ -164,16 +155,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '800',
     },
-    closeButton: {
-        justifyContent: 'center',
-        minHeight: 36,
-        paddingHorizontal: 4,
-    },
-    closeButtonText: {
-        color: '#175cd3',
-        fontSize: 13,
-        fontWeight: '800',
-    },
     container: {
         flex: 1,
         gap: 14,
@@ -198,16 +179,6 @@ const styles = StyleSheet.create({
         color: '#b42318',
         fontSize: 14,
         lineHeight: 20,
-    },
-    header: {
-        alignItems: 'flex-start',
-        flexDirection: 'row',
-        gap: 12,
-        justifyContent: 'space-between',
-    },
-    headerText: {
-        flex: 1,
-        gap: 2,
     },
     helperText: {
         color: '#667085',
@@ -267,15 +238,5 @@ const styles = StyleSheet.create({
         color: '#111827',
         fontSize: 14,
         fontWeight: '800',
-    },
-    subtitle: {
-        color: '#667085',
-        fontSize: 13,
-        lineHeight: 18,
-    },
-    title: {
-        color: '#111827',
-        fontSize: 20,
-        fontWeight: '900',
     },
 });

@@ -11,6 +11,13 @@ Tenhle soubor doplnuje hlavni `AGENTS.md`. Ma drzet prakticka pravidla pro struk
 - Kdyz neco neni potreba sdilet, nech to co nejbliz obrazovce.
 - Nove slozky nezakladej dopredu jen proto, ze by se jednou mohly hodit.
 
+## Expo Router routy
+
+- Kdyz dynamicka route zacne mit child routy, pouzij slozkovy tvar s `index.tsx`.
+- Priklad: detail receptu s editaci patri do `app/(tabs)/recipes/[recipeId]/index.tsx` a `app/(tabs)/recipes/[recipeId]/edit.tsx`, ne do kombinace `[recipeId].tsx` a `[recipeId]/edit.tsx`.
+- Stejne pravidlo plati pro dalsi entity, napr. `ingredients/[ingredientId]/index.tsx` vedle `ingredients/[ingredientId]/edit.tsx`.
+- Pri upravach Expo Router rout automaticky hlidej tuhle strukturu a navrhni opravu, kdyz narazis na smichany tvar.
+
 ## Minimalni cilova struktura
 
 ```text

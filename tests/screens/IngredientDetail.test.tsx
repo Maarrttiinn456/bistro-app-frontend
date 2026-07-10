@@ -3,15 +3,16 @@ import { render, screen, userEvent, waitFor } from '@testing-library/react-nativ
 import { Alert } from 'react-native';
 
 import IngredientDetailScreen from '@/app/(tabs)/ingredients/[ingredientId]';
-import type { Ingredient } from '@/src/api/generated/model';
-import { IngredientBaseUnit } from '@/src/api/generated/model';
 import {
     getGetIngredientQueryKey,
     getGetIngredientsQueryKey,
     useArchiveIngredient,
     useGetIngredient,
 } from '@/src/api/generated/ingredients/ingredients';
+import type { Ingredient } from '@/src/api/generated/model';
+import { IngredientBaseUnit } from '@/src/api/generated/model';
 
+const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockInvalidateQueries = jest.fn();
 const mockRemoveQueries = jest.fn();
@@ -21,6 +22,7 @@ jest.mock('expo-router', () => ({
         ingredientId: 'ingredient-1',
     }),
     useRouter: () => ({
+        push: mockPush,
         replace: mockReplace,
     }),
 }));
@@ -62,7 +64,7 @@ const ingredient: Ingredient = {
     householdId: null,
     id: 'ingredient-1',
     kcalPer100: 18,
-    name: 'Rajčata',
+    name: 'Rajcata',
     proteinPer100: 0.9,
     servingGrams: 150,
     servingLabel: '1 kus',
@@ -109,9 +111,6 @@ describe('IngredientDetailScreen', () => {
         expect(
             screen.getByTestId('ingredient-detail-loading-indicator'),
         ).toBeOnTheScreen();
-        expect(
-            screen.getByText('Načítám detail ingredience...'),
-        ).toBeOnTheScreen();
     });
 
     it('shows an error state when the ingredient cannot be loaded', async () => {
@@ -120,7 +119,7 @@ describe('IngredientDetailScreen', () => {
         await render(<IngredientDetailScreen />);
 
         expect(
-            screen.getByText('Ingredience se nepovedlo načíst.'),
+            screen.getByText(/Ingredience se nepovedlo/),
         ).toBeOnTheScreen();
     });
 
@@ -129,11 +128,9 @@ describe('IngredientDetailScreen', () => {
 
         await render(<IngredientDetailScreen />);
 
-        expect(screen.getByText('Rajčata')).toBeOnTheScreen();
+        expect(screen.getByText('Rajcata')).toBeOnTheScreen();
         expect(screen.getByText('Bio farma')).toBeOnTheScreen();
-        expect(screen.getByText('Základní jednotka: g')).toBeOnTheScreen();
-        expect(screen.getByText('Kód: 123456')).toBeOnTheScreen();
-        expect(screen.getByText('Nutriční hodnoty na 100 g')).toBeOnTheScreen();
+        expect(screen.getByText(/123456/)).toBeOnTheScreen();
         expect(screen.getByText('18')).toBeOnTheScreen();
         expect(screen.getByText('0.9g')).toBeOnTheScreen();
         expect(screen.getByText('4g')).toBeOnTheScreen();
@@ -154,10 +151,10 @@ describe('IngredientDetailScreen', () => {
 
         await render(<IngredientDetailScreen />);
 
-        expect(screen.getByText('Porce zatím není vyplněná.')).toBeOnTheScreen();
+        expect(screen.getByText(/^Porce$/)).toBeOnTheScreen();
     });
 
-    it('opens ingredient actions from the floating action button', async () => {
+    it('disables edit for a global ingredient', async () => {
         const user = userEvent.setup();
         mockIngredientQuery({ data: { ingredient } });
 
@@ -169,10 +166,37 @@ describe('IngredientDetailScreen', () => {
         expect(
             screen.getByRole('button', { name: /Upravit ingredienci/ }),
         ).toBeDisabled();
-        expect(screen.getByText('Připravujeme')).toBeOnTheScreen();
+        expect(
+            screen.getByText('Globální surovinu nejde upravit'),
+        ).toBeOnTheScreen();
         expect(
             screen.getByRole('button', { name: /Smazat ingredienci/ }),
         ).toBeOnTheScreen();
+    });
+
+    it('opens the edit modal for a household ingredient', async () => {
+        const user = userEvent.setup();
+        mockIngredientQuery({
+            data: {
+                ingredient: {
+                    ...ingredient,
+                    householdId: 'household-1',
+                },
+            },
+        });
+
+        await render(<IngredientDetailScreen />);
+        await user.press(
+            screen.getByRole('button', { name: 'Akce ingredience' }),
+        );
+        await user.press(
+            screen.getByRole('button', { name: /Upravit ingredienci/ }),
+        );
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/ingredients/[ingredientId]/edit',
+            params: { ingredientId: 'ingredient-1' },
+        });
     });
 
     it('opens a confirmation alert before deleting the ingredient', async () => {

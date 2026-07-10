@@ -98,6 +98,15 @@ describe('CreateIngredient', () => {
         expect(screen.getByDisplayValue('Tempeh')).toBeOnTheScreen();
     });
 
+    it('closes the create ingredient modal', async () => {
+        const user = userEvent.setup();
+
+        await render(<CreateIngredient />);
+        await user.press(screen.getByRole('button', { name: 'Zavřít' }));
+
+        expect(mockBack).toHaveBeenCalled();
+    });
+
     it('prefills the barcode from route params', async () => {
         mockSearchParams = {
             barcode: '3017620422003',

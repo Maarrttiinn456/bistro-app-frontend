@@ -19,6 +19,7 @@ const IngredientsLayout = () => {
             <Stack.Screen
                 name="create"
                 options={{
+                    headerShown: false,
                     presentation: 'formSheet',
                     title: 'Nová surovina',
                     sheetAllowedDetents: [0.9],
@@ -28,6 +29,7 @@ const IngredientsLayout = () => {
             <Stack.Screen
                 name="scan"
                 options={{
+                    headerShown: false,
                     presentation: 'formSheet',
                     title: 'Skenovat kód',
                     sheetAllowedDetents: [0.9],
@@ -35,8 +37,18 @@ const IngredientsLayout = () => {
                 }}
             />
             <Stack.Screen
-                name="[ingredientId]"
+                name="[ingredientId]/index"
                 options={{ title: 'Detail ingredience' }}
+            />
+            <Stack.Screen
+                name="[ingredientId]/edit"
+                options={{
+                    headerShown: false,
+                    presentation: 'formSheet',
+                    title: 'Upravit surovinu',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
+                }}
             />
         </Stack>
     );

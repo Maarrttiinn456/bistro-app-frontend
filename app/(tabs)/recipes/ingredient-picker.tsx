@@ -58,7 +58,7 @@ const CreateRecipeIngredientPickerScreen = () => {
 
     return (
         <Screen
-            contentStyle={screenContentStyles.plain}
+            contentStyle={screenContentStyles.modalPlain}
             edges={['top', 'bottom', 'left', 'right']}
         >
             <CreateRecipeIngredientPicker

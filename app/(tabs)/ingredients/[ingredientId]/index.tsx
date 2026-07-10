@@ -112,7 +112,7 @@ const IngredientDetailScreen = () => {
                     )}
                 </View>
             </ScrollView>
-            <IngredientDetailActionMenu ingredientId={ingredient.id} />
+            <IngredientDetailActionMenu ingredient={ingredient} />
         </Screen>
     );
 };

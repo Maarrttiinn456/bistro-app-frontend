@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import type { ResolveIngredientBarcodeResponse } from '@/src/api/generated/model';
+import { ModalHeader } from '@/src/components/ModalHeader';
 import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { getIngredientBarcodeSourceLabel } from '@/src/ingredients/ingredientBarcodeScan';
 import { formatIngredientNutritionPer100 } from '@/src/ingredients/ingredientFormatters';
@@ -83,19 +84,10 @@ const IngredientBarcodeScanScreen = () => {
 
     return (
         <Screen
-            contentStyle={[screenContentStyles.plain, styles.content]}
+            contentStyle={screenContentStyles.modalPlain}
             edges={['top', 'bottom', 'left', 'right']}
         >
-            <View style={styles.header}>
-                    <Text style={styles.title}>Skenovat kód</Text>
-                    <Pressable
-                        accessibilityRole="button"
-                        style={styles.closeButton}
-                        onPress={scan.handleClose}
-                    >
-                        <Text style={styles.closeButtonText}>Zavřít</Text>
-                    </Pressable>
-            </View>
+            <ModalHeader title="Skenovat kód" onClose={scan.handleClose} />
 
             <View style={[styles.cameraFrame, { height: cameraHeight }]}>
                     {scan.isCameraActive ? (
@@ -251,20 +243,6 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         textAlign: 'center',
     },
-    closeButton: {
-        justifyContent: 'center',
-        minHeight: 40,
-        paddingHorizontal: 8,
-    },
-    closeButtonText: {
-        color: '#175cd3',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    content: {
-        flex: 1,
-        gap: 16,
-    },
     disabledButton: {
         opacity: 0.5,
     },
@@ -279,12 +257,6 @@ const styles = StyleSheet.create({
         color: '#b42318',
         fontSize: 14,
         lineHeight: 20,
-    },
-    header: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        gap: 12,
-        justifyContent: 'space-between',
     },
     infoBox: {
         backgroundColor: '#f2f4f7',
@@ -382,11 +354,6 @@ const styles = StyleSheet.create({
         color: '#175cd3',
         fontSize: 14,
         fontWeight: '700',
-    },
-    title: {
-        color: '#111827',
-        fontSize: 24,
-        fontWeight: '800',
     },
 });
 

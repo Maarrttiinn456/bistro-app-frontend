@@ -7,18 +7,28 @@ import {
     getGetIngredientsQueryKey,
     useArchiveIngredient,
 } from '@/src/api/generated/ingredients/ingredients';
+import type { Ingredient } from '@/src/api/generated/model';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
 
 type IngredientDetailActionMenuProps = {
-    ingredientId: string;
+    ingredient: Ingredient;
 };
 
 export const IngredientDetailActionMenu = ({
-    ingredientId,
+    ingredient,
 }: IngredientDetailActionMenuProps) => {
     const queryClient = useQueryClient();
     const router = useRouter();
     const archiveIngredientMutation = useArchiveIngredient();
+    const ingredientId = ingredient.id;
+    const canEditIngredient = ingredient.householdId !== null;
+
+    const handleEditPress = () => {
+        router.push({
+            pathname: '/ingredients/[ingredientId]/edit',
+            params: { ingredientId },
+        });
+    };
 
     const handleDeleteConfirm = async () => {
         try {
@@ -61,10 +71,13 @@ export const IngredientDetailActionMenu = ({
             closedIcon="dots-horizontal"
             items={[
                 {
-                    disabled: true,
-                    hint: 'Připravujeme',
+                    disabled: !canEditIngredient,
+                    hint: canEditIngredient
+                        ? undefined
+                        : 'Globální surovinu nejde upravit',
                     icon: 'pencil',
                     label: 'Upravit ingredienci',
+                    onPress: handleEditPress,
                 },
                 {
                     destructive: true,

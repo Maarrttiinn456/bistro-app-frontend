@@ -23,6 +23,7 @@ const RecipesLayout = () => {
             <Stack.Screen
                 name="ingredient-picker"
                 options={{
+                    headerShown: false,
                     presentation: 'formSheet',
                     title: 'Přidat surovinu',
                     sheetAllowedDetents: [0.9],
@@ -32,6 +33,7 @@ const RecipesLayout = () => {
             <Stack.Screen
                 name="ingredient-create"
                 options={{
+                    headerShown: false,
                     presentation: 'formSheet',
                     title: 'Nová surovina',
                     sheetAllowedDetents: [0.9],
@@ -41,13 +43,17 @@ const RecipesLayout = () => {
             <Stack.Screen
                 name="ingredient-scan"
                 options={{
+                    headerShown: false,
                     presentation: 'formSheet',
                     title: 'Skenovat kód',
                     sheetAllowedDetents: [0.9],
                     sheetCornerRadius: 16,
                 }}
             />
-            <Stack.Screen name="[recipeId]" options={{ title: 'Recept' }} />
+            <Stack.Screen
+                name="[recipeId]/index"
+                options={{ title: 'Detail receptu' }}
+            />
             <Stack.Screen
                 name="[recipeId]/edit"
                 options={{ title: 'Upravit recept' }}

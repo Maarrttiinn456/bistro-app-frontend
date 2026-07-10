@@ -31,7 +31,8 @@ import type {
   GetIngredientsResponse,
   IngredientResponse,
   ResolveIngredientBarcodeBody,
-  ResolveIngredientBarcodeResponse
+  ResolveIngredientBarcodeResponse,
+  UpdateIngredientBody
 } from '../model';
 
 import { customInstance } from '../../mutator';
@@ -427,3 +428,67 @@ export function useGetIngredient<TData = Awaited<ReturnType<typeof getIngredient
 
 
 
+/**
+ * @summary Update ingredient
+ */
+export const updateIngredient = (
+    ingredientId: string,
+    updateIngredientBody: BodyType<UpdateIngredientBody>,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<IngredientResponse>(
+      {url: `/v1/ingredients/${ingredientId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateIngredientBody, signal
+    },
+      );
+    }
+
+
+
+export const getUpdateIngredientMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIngredient>>, TError,{ingredientId: string;data: BodyType<UpdateIngredientBody>}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateIngredient>>, TError,{ingredientId: string;data: BodyType<UpdateIngredientBody>}, TContext> => {
+
+const mutationKey = ['updateIngredient'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateIngredient>>, {ingredientId: string;data: BodyType<UpdateIngredientBody>}> = (props) => {
+          const {ingredientId,data} = props ?? {};
+
+          return  updateIngredient(ingredientId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateIngredientMutationResult = NonNullable<Awaited<ReturnType<typeof updateIngredient>>>
+    export type UpdateIngredientMutationBody = BodyType<UpdateIngredientBody>
+    export type UpdateIngredientMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Update ingredient
+ */
+export const useUpdateIngredient = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIngredient>>, TError,{ingredientId: string;data: BodyType<UpdateIngredientBody>}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateIngredient>>,
+        TError,
+        {ingredientId: string;data: BodyType<UpdateIngredientBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateIngredientMutationOptions(options), queryClient);
+    }
