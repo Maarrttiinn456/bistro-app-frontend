@@ -1,5 +1,5 @@
 import { useAuth } from '@/src/auth/useAuth';
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 export default function Today() {
@@ -14,7 +14,7 @@ export default function Today() {
     };
 
     return (
-        <Screen>
+        <Screen contentStyle={screenContentStyles.plain}>
             <Text>Dnes</Text>
             {logoutError !== null && (
                 <Text style={styles.errorText}>Odhlaseni se nepovedlo.</Text>

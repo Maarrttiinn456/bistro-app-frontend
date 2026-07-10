@@ -35,6 +35,7 @@ Detailni pravidla jsou v `.agents/rules/`:
 - Pomahas po malych krocich. Negeneruj celou appku, pokud o to vyslovne nepozadam.
 - Frontend nikdy nevola Supabase primo.
 - Nevratne akce, napr. delete, force push, send nebo publish, vyzaduji explicitni potvrzeni.
+- Pri reseni startu nebo prihlaseni vzdy zkontroluj aktualni IPv4 adresu stroje a porovnej ji s `EXPO_PUBLIC_API_URL` v `.env.local`. Pokud nesedi, upozorni uzivatele a navrhni/uprav spravnou hodnotu.
 
 ## Kde co hledat
 
@@ -49,8 +50,11 @@ assets/                    # obrazky a staticke soubory
 
 ## Dev prikazy
 
+Pred startem na mobilu zkontroluj, ze `EXPO_PUBLIC_API_URL` miri na aktualni IPv4 adresu pocitace v dane siti, napr. `http://10.217.113.48:3000`. Po zmene `.env.local` restartuj Expo s vycistenou cache.
+
 ```bash
 npm run start
+npx expo start -c
 npm run android
 npm run ios
 npm run web

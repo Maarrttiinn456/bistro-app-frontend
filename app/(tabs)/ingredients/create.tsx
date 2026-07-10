@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import {
     Pressable,
     ScrollView,
@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { CreateIngredientBodyBaseUnit } from '@/src/api/generated/model';
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { useCreateIngredientForm } from '@/src/ingredients/useCreateIngredientForm';
 
 const getStringParam = (value: string | string[] | undefined) => {
@@ -26,6 +26,7 @@ const CreateIngredient = () => {
         name?: string;
         rowId?: string;
     }>();
+    const pathname = usePathname();
     const router = useRouter();
     const form = useCreateIngredientForm({
         initialBarcode: getStringParam(params.barcode),
@@ -33,11 +34,23 @@ const CreateIngredient = () => {
         rowId: getStringParam(params.rowId),
         onIngredientCreated: () => router.back(),
     });
+    const rowId = getStringParam(params.rowId);
+
+    const handleScanPress = () => {
+        const scanPathname = pathname.startsWith('/recipes')
+            ? '/recipes/ingredient-scan'
+            : '/ingredients/scan';
+
+        router.push({
+            pathname: scanPathname,
+            params: rowId.length > 0 ? { rowId } : {},
+        });
+    };
 
     return (
         <Screen>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={screenContentStyles.scroll}
                 contentInsetAdjustmentBehavior="automatic"
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
@@ -66,6 +79,15 @@ const CreateIngredient = () => {
                         value={form.barcode}
                         onChangeText={form.setBarcode}
                     />
+                    <Pressable
+                        accessibilityRole="button"
+                        style={styles.secondaryButton}
+                        onPress={handleScanPress}
+                    >
+                        <Text style={styles.secondaryButtonText}>
+                            Naskenovat kód
+                        </Text>
+                    </Pressable>
                     <View style={styles.optionGrid}>
                         {[
                             CreateIngredientBodyBaseUnit.g,
@@ -181,10 +203,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
     },
-    content: {
-        gap: 18,
-        paddingBottom: 40,
-    },
     disabledButton: {
         opacity: 0.5,
     },
@@ -245,6 +263,21 @@ const styles = StyleSheet.create({
         color: '#111827',
         fontSize: 18,
         fontWeight: '800',
+    },
+    secondaryButton: {
+        alignItems: 'center',
+        borderColor: '#111827',
+        borderRadius: 8,
+        borderWidth: 1,
+        justifyContent: 'center',
+        minHeight: 42,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+    },
+    secondaryButtonText: {
+        color: '#111827',
+        fontSize: 14,
+        fontWeight: '700',
     },
 });
 

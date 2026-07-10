@@ -17,9 +17,11 @@ const mockBack = jest.fn();
 const mockInvalidateQueries = jest.fn();
 const mockSetQueryData = jest.fn();
 let mockSearchParams: Record<string, string | undefined> = {};
+let mockPathname = '/ingredients/create';
 
 jest.mock('expo-router', () => ({
     useLocalSearchParams: () => mockSearchParams,
+    usePathname: () => mockPathname,
     useRouter: () => ({
         back: mockBack,
     }),
@@ -86,6 +88,7 @@ describe('CreateIngredient', () => {
             name: 'Tempeh',
             rowId: 'row-1',
         };
+        mockPathname = '/ingredients/create';
         mockCreateIngredientMutation();
     });
 

@@ -28,10 +28,12 @@ const barcodeTypes: BarcodeType[] = [
 ];
 
 type UseIngredientBarcodeScanParams = {
+    createPathname?: '/ingredients/create' | '/recipes/ingredient-create';
     rowId?: string;
 };
 
 export const useIngredientBarcodeScan = ({
+    createPathname = '/ingredients/create',
     rowId = '',
 }: UseIngredientBarcodeScanParams = {}) => {
     const router = useRouter();
@@ -140,7 +142,7 @@ export const useIngredientBarcodeScan = ({
         }
 
         router.push({
-            pathname: '/ingredients/create',
+            pathname: createPathname,
             params: routeParams,
         });
     };

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { CreateRecipeBasicsSection } from '@/src/recipes/CreateRecipeBasicsSection';
 import { CreateRecipeIngredientsSection } from '@/src/recipes/CreateRecipeIngredientsSection';
 import { CreateRecipeMacroSummary } from '@/src/recipes/CreateRecipeMacroSummary';
@@ -11,15 +11,9 @@ import { useCreateRecipeForm } from '@/src/recipes/useCreateRecipeForm';
 const CreateRecipe = () => {
     const router = useRouter();
     const form = useCreateRecipeForm({
-        onCreateIngredient: ({ name, rowId }) => {
+        onPickIngredient: ({ rowId }) => {
             router.push({
-                pathname: '/ingredients/create',
-                params: { name, rowId },
-            });
-        },
-        onScanIngredient: ({ rowId }) => {
-            router.push({
-                pathname: '/ingredients/scan',
+                pathname: '/recipes/ingredient-picker',
                 params: { rowId },
             });
         },
@@ -34,7 +28,7 @@ const CreateRecipe = () => {
     return (
         <Screen>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={screenContentStyles.scroll}
                 contentInsetAdjustmentBehavior="automatic"
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
@@ -50,21 +44,10 @@ const CreateRecipe = () => {
                     onPrepTimeMinChange={form.setPrepTimeMin}
                 />
                 <CreateRecipeIngredientsSection
-                    activeRowId={form.activeIngredientRowId}
-                    isSearchError={form.ingredientsQuery.isError}
-                    isSearching={form.ingredientsQuery.isLoading}
                     rows={form.ingredientRows}
-                    searchedIngredients={form.searchedIngredients}
-                    shouldShowResults={form.shouldShowIngredientResults}
                     onAdd={form.handleAddIngredientRow}
-                    onCreateIngredient={form.handleCreateIngredient}
-                    onFocus={form.setActiveIngredientRowId}
                     onRemove={form.handleRemoveIngredientRow}
-                    onScan={form.handleScanIngredient}
-                    onSearchChange={form.handleIngredientSearchChange}
-                    onSelect={form.handleIngredientSelect}
                     onToggleDisplayAmount={form.handleToggleDisplayAmount}
-                    onToggleMode={form.handleIngredientModeToggle}
                     onUpdate={form.updateIngredientRow}
                 />
                 <CreateRecipeMacroSummary totals={form.macroTotals} />
@@ -123,10 +106,6 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 16,
         fontWeight: '700',
-    },
-    content: {
-        gap: 18,
-        paddingBottom: 40,
     },
     disabledButton: {
         opacity: 0.5,

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, render, screen, userEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import CreateRecipe from '@/app/(tabs)/recipes/create';
+import CreateRecipeIngredientPickerScreen from '@/app/(tabs)/recipes/ingredient-picker';
 import type {
     CreateRecipeBody,
     Ingredient,
@@ -16,13 +18,17 @@ import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import { useCreateRecipe } from '@/src/api/generated/recipes/recipes';
 
 const mockPush = jest.fn();
+const mockBack = jest.fn();
 const mockGetQueryData = jest.fn();
 const mockSetQueryData = jest.fn();
 const mockInvalidateQueries = jest.fn();
+const mockUseLocalSearchParams = jest.fn(() => ({ rowId: 'picker-row' }));
 
 jest.mock('expo-router', () => ({
     useFocusEffect: (callback: () => void) => callback(),
+    useLocalSearchParams: () => mockUseLocalSearchParams(),
     useRouter: () => ({
+        back: mockBack,
         push: mockPush,
     }),
 }));
@@ -96,41 +102,54 @@ const fillRequiredRecipeFields = async () => {
     return user;
 };
 
-const selectCatalogIngredient = async () => {
-    const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText('Vyhledat surovinu 1'), 'Rajčata');
-    await user.press(screen.getByRole('button', { name: /Rajčata/ }));
-
-    return user;
+const mockIngredientHandoff = (rowId = 'handoff-row') => {
+    mockGetQueryData.mockReturnValueOnce({
+        ingredient,
+        rowId,
+    });
 };
 
 describe('CreateRecipe', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
         mockGetQueryData.mockReturnValue(null);
         mockIngredientsQuery();
         mockCreateRecipeMutation();
     });
 
-    it('renders the simplified base form and first ingredient row', async () => {
+    it('renders the simplified base form without an empty ingredient row', async () => {
         await render(<CreateRecipe />);
 
         expect(screen.getByLabelText('Název receptu')).toBeOnTheScreen();
         expect(screen.getByLabelText('Počet porcí')).toBeOnTheScreen();
-        expect(screen.getByText('Surovina 1')).toBeOnTheScreen();
-        expect(screen.getByLabelText('Vyhledat surovinu 1')).toBeOnTheScreen();
+        expect(screen.getByText('Zatím tu není žádná surovina.')).toBeOnTheScreen();
+        expect(screen.queryByText('Surovina 1')).toBeNull();
         expect(
             screen.getByRole('button', { name: 'Přidat surovinu' }),
         ).toBeOnTheScreen();
         expect(screen.queryByLabelText('URL obrázku')).toBeNull();
     });
 
-    it('searches ingredients with the all scope', async () => {
+    it('opens ingredient picker from the add button', async () => {
         const user = userEvent.setup();
 
         await render(<CreateRecipe />);
-        await user.type(screen.getByLabelText('Vyhledat surovinu 1'), 'raj');
+        await user.press(screen.getByRole('button', { name: 'Přidat surovinu' }));
+
+        expect(mockPush).toHaveBeenCalledWith({
+            pathname: '/recipes/ingredient-picker',
+            params: expect.objectContaining({
+                rowId: expect.any(String),
+            }),
+        });
+    });
+
+    it('searches ingredients with the all scope from the picker', async () => {
+        const user = userEvent.setup();
+
+        await render(<CreateRecipeIngredientPickerScreen />);
+        await user.type(screen.getByLabelText('Vyhledat surovinu'), 'raj');
 
         expect(mockedUseGetIngredients).toHaveBeenLastCalledWith(
             {
@@ -145,20 +164,71 @@ describe('CreateRecipe', () => {
         );
     });
 
-    it('selects a catalog ingredient and shows compact nutrition', async () => {
+    it('stores selected picker ingredient as a recipe handoff', async () => {
+        const user = userEvent.setup();
+
+        await render(<CreateRecipeIngredientPickerScreen />);
+        await user.type(screen.getByLabelText('Vyhledat surovinu'), 'raj');
+        await user.press(screen.getByRole('button', { name: 'Přidat Rajčata' }));
+
+        expect(mockSetQueryData).toHaveBeenCalledWith(expect.any(Array), {
+            ingredient,
+            rowId: 'picker-row',
+        });
+        expect(mockBack).toHaveBeenCalled();
+    });
+
+    it('selects a catalog ingredient and shows a compact amount row', async () => {
+        mockIngredientHandoff();
+
         await render(<CreateRecipe />);
-        await selectCatalogIngredient();
 
         expect(screen.getByText('Rajčata')).toBeOnTheScreen();
         expect(screen.getByText(/100 g: 100 kcal/)).toBeOnTheScreen();
+        expect(
+            screen.getByLabelText('Množství suroviny 1 v gramech'),
+        ).toBeOnTheScreen();
+        expect(screen.queryByLabelText('Vyhledat surovinu')).toBeNull();
+    });
+
+    it('removes the selected ingredient row', async () => {
+        const user = userEvent.setup();
+        mockIngredientHandoff();
+
+        await render(<CreateRecipe />);
+        await user.press(screen.getByRole('button', { name: 'Odebrat' }));
+
+        expect(Alert.alert).toHaveBeenCalledWith(
+            'Odebrat surovinu?',
+            '"Rajčata" se odebere z receptu.',
+            expect.any(Array),
+        );
+        expect(screen.getByText('Rajčata')).toBeOnTheScreen();
+
+        const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2] as {
+            onPress?: () => void;
+            text: string;
+        }[];
+
+        await act(async () => {
+            alertButtons.find((button) => button.text === 'Odebrat')?.onPress?.();
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByText('Rajčata')).toBeNull();
+        });
+        expect(screen.getByText('Zatím tu není žádná surovina.')).toBeOnTheScreen();
     });
 
     it('calculates approximate recipe macros from selected ingredients', async () => {
         const user = userEvent.setup();
+        mockIngredientHandoff();
 
         await render(<CreateRecipe />);
-        await selectCatalogIngredient();
-        await user.type(screen.getByLabelText('Gramáž suroviny 1'), '200');
+        await user.type(
+            screen.getByLabelText('Množství suroviny 1 v gramech'),
+            '200',
+        );
 
         expect(screen.getByText('200')).toBeOnTheScreen();
         expect(screen.getByText('20g')).toBeOnTheScreen();
@@ -166,34 +236,32 @@ describe('CreateRecipe', () => {
         expect(screen.getByText('10g')).toBeOnTheScreen();
     });
 
-    it('blocks submit when a catalog ingredient is not selected', async () => {
+    it('blocks submit when no ingredient is added', async () => {
         await render(<CreateRecipe />);
         const user = await fillRequiredRecipeFields();
 
-        await user.type(screen.getByLabelText('Gramáž suroviny 1'), '100');
         await user.press(
             screen.getByRole('button', { name: 'Vytvořit recept' }),
         );
 
-        expect(
-            screen.getByText(
-                'Vyber surovinu z katalogu, nebo přepni na volnou surovinu bez maker.',
-            ),
-        ).toBeOnTheScreen();
+        expect(screen.getByText('Přidej alespoň jednu surovinu.')).toBeOnTheScreen();
         expect(createRecipeMutateAsync).not.toHaveBeenCalled();
     });
 
     it('submits catalog ingredients without macros', async () => {
         const user = userEvent.setup();
+        mockIngredientHandoff();
 
         await render(<CreateRecipe />);
         await user.type(screen.getByLabelText('Název receptu'), 'Letní salát');
         await user.press(screen.getByRole('button', { name: 'Oběd' }));
-        await selectCatalogIngredient();
-        await user.type(screen.getByLabelText('Gramáž suroviny 1'), '120');
+        await user.type(
+            screen.getByLabelText('Množství suroviny 1 v gramech'),
+            '120',
+        );
         await user.press(
             screen.getByRole('button', {
-                name: 'Zobrazit jako ks/lžíce',
+                name: 'Zadat ks/lžíce',
             }),
         );
         await user.type(
@@ -239,79 +307,63 @@ describe('CreateRecipe', () => {
         });
     });
 
-    it('submits a free text ingredient only after explicit no-macro mode is selected', async () => {
-        const user = userEvent.setup();
-
-        await render(<CreateRecipe />);
-        await user.type(screen.getByLabelText('Název receptu'), 'Vývar');
-        await user.press(screen.getByRole('button', { name: 'Oběd' }));
-        await user.press(
-            screen.getByRole('button', {
-                name: 'Nemám v katalogu',
-            }),
-        );
-        await user.type(
-            screen.getByLabelText('Volná textová surovina 1'),
-            'Sůl',
-        );
-        await user.type(screen.getByLabelText('Gramáž suroviny 1'), '0');
-        await user.press(
-            screen.getByRole('button', { name: 'Vytvořit recept' }),
-        );
-
-        await waitFor(() => expect(createRecipeMutateAsync).toHaveBeenCalled());
-
-        expect(
-            screen.getByText(
-                'Nebude se započítávat do maker receptu.',
-            ),
-        ).toBeOnTheScreen();
-        expect(
-            createRecipeMutateAsync.mock.calls[0][0].data.ingredients[0],
-        ).toEqual(
-            expect.objectContaining({
-                displayName: 'Sůl',
-                ingredientId: null,
-            }),
-        );
-    });
-
     it('opens a separate create ingredient screen for missing ingredients', async () => {
         const user = userEvent.setup();
         mockIngredientsQuery([]);
 
-        await render(<CreateRecipe />);
-        await user.type(screen.getByLabelText('Vyhledat surovinu 1'), 'Tempeh');
+        await render(<CreateRecipeIngredientPickerScreen />);
+        await user.type(screen.getByLabelText('Vyhledat surovinu'), 'Tempeh');
         await user.press(
-            screen.getByRole('button', { name: 'Vytvořit surovinu' }),
+            screen.getByRole('button', {
+                name: 'Přidat "Tempeh" do databáze',
+            }),
         );
 
         expect(mockPush).toHaveBeenCalledWith({
-            pathname: '/ingredients/create',
+            pathname: '/recipes/ingredient-create',
             params: expect.objectContaining({
                 name: 'Tempeh',
+                rowId: 'picker-row',
             }),
         });
     });
 
-    it('opens barcode scanner for the ingredient row', async () => {
+    it('opens barcode scanner from the ingredient picker', async () => {
         const user = userEvent.setup();
 
-        await render(<CreateRecipe />);
+        await render(<CreateRecipeIngredientPickerScreen />);
         await user.press(
             screen.getByRole('button', { name: 'Naskenovat kód' }),
         );
 
         expect(mockPush).toHaveBeenCalledWith({
-            pathname: '/ingredients/scan',
+            pathname: '/recipes/ingredient-scan',
             params: expect.objectContaining({
-                rowId: expect.any(String),
+                rowId: 'picker-row',
             }),
         });
     });
 
+    it('adds a handoff ingredient from create or scan after returning to the recipe', async () => {
+        mockGetQueryData
+            .mockReturnValueOnce({
+                ingredient,
+                rowId: 'handoff-row',
+            })
+            .mockReturnValue(null);
+
+        await render(<CreateRecipe />);
+
+        expect(screen.getByText('Rajčata')).toBeOnTheScreen();
+        expect(
+            screen.getByLabelText('Množství suroviny 1 v gramech'),
+        ).toBeOnTheScreen();
+        expect(mockSetQueryData).toHaveBeenCalledWith(expect.any(Array), null);
+    });
+
     it('keeps optional details hidden until expanded and submits them when filled', async () => {
         const user = userEvent.setup();
+        mockIngredientHandoff();
 
         await render(<CreateRecipe />);
         await user.press(
@@ -322,8 +374,10 @@ describe('CreateRecipe', () => {
         await user.type(screen.getByLabelText('Postup receptu'), 'Promíchat');
         await user.type(screen.getByLabelText('Název receptu'), 'Letní salát');
         await user.press(screen.getByRole('button', { name: 'Oběd' }));
-        await selectCatalogIngredient();
-        await user.type(screen.getByLabelText('Gramáž suroviny 1'), '120');
+        await user.type(
+            screen.getByLabelText('Množství suroviny 1 v gramech'),
+            '120',
+        );
         await user.press(
             screen.getByRole('button', { name: 'Vytvořit recept' }),
         );

@@ -1,6 +1,6 @@
 import type { Recipe } from '@/src/api/generated/model';
 import { useGetRecipes } from '@/src/api/generated/recipes/recipes';
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { RecipeAddActionMenu } from '@/src/recipes/RecipeAddActionMenu';
 import { formatMealTypes } from '@/src/recipes/recipeFormatters';
 import { useRouter } from 'expo-router';
@@ -50,12 +50,16 @@ const Recipes = () => {
     };
 
     const recipes = data?.recipes ?? [];
+    const isRefreshing = isFetching && !isLoading;
 
     const renderEmptyState = () => {
         if (isLoading) {
             return (
                 <View style={styles.stateContainer}>
-                    <ActivityIndicator accessibilityLabel="Načítám recepty" />
+                    <ActivityIndicator
+                        accessibilityLabel="Načítám recepty"
+                        testID="recipes-loading-indicator"
+                    />
                     <Text style={styles.stateText}>Načítám recepty...</Text>
                 </View>
             );
@@ -83,13 +87,14 @@ const Recipes = () => {
     return (
         <Screen>
             <FlatList
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={screenContentStyles.list}
                 data={recipes}
                 keyExtractor={(recipe) => recipe.id}
                 ListEmptyComponent={renderEmptyState}
                 refreshControl={
                     <RefreshControl
-                        refreshing={isFetching}
+                        refreshing={isRefreshing}
+                        testID="recipes-refresh-control"
                         onRefresh={refetch}
                     />
                 }
@@ -97,20 +102,12 @@ const Recipes = () => {
                     <RecipeListItem recipe={item} onPress={handleRecipePress} />
                 )}
             />
-            <RecipeAddActionMenu />
+            {isLoading ? null : <RecipeAddActionMenu />}
         </Screen>
     );
 };
 
 const styles = StyleSheet.create({
-    listContent: {
-        backgroundColor: '#fff',
-        flexGrow: 1,
-        gap: 12,
-        paddingBottom: 96,
-        paddingHorizontal: 16,
-        paddingTop: 24,
-    },
     recipeItem: {
         borderColor: '#d0d5dd',
         borderRadius: 8,

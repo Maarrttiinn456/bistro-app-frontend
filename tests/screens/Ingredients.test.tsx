@@ -19,6 +19,19 @@ jest.mock('expo-router', () => ({
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => () => null);
 
+jest.mock('react-native', () => {
+    const React = require('react') as typeof import('react');
+    const ReactNative =
+        jest.requireActual<typeof import('react-native')>('react-native');
+
+    Object.defineProperty(ReactNative, 'RefreshControl', {
+        value: (props: Record<string, unknown>) =>
+            React.createElement(ReactNative.View, props),
+    });
+
+    return ReactNative;
+});
+
 jest.mock('@/src/api/generated/ingredients/ingredients', () => ({
     useGetIngredients: jest.fn(),
 }));
@@ -48,6 +61,7 @@ const mockIngredientsQuery = (
     mockedUseGetIngredients.mockReturnValue({
         data: undefined,
         isError: false,
+        isFetching: false,
         isLoading: false,
         ...overrides,
     } as ReturnType<typeof useGetIngredients>);
@@ -71,8 +85,27 @@ describe('Ingredients', () => {
             screen.getByTestId('ingredients-loading-indicator'),
         ).toBeOnTheScreen();
         expect(
+            screen.getByTestId('ingredients-refresh-control').props.refreshing,
+        ).toBe(false);
+        expect(
+            screen.queryByRole('button', { name: 'Přidat ingredienci' }),
+        ).not.toBeOnTheScreen();
+        expect(
             screen.getByText('Načítám ingredience...'),
         ).toBeOnTheScreen();
+    });
+
+    it('shows pull-to-refresh only after the initial ingredients load', async () => {
+        mockIngredientsQuery({
+            data: { ingredients: [ingredient] },
+            isFetching: true,
+        });
+
+        await render(<Ingredients />);
+
+        expect(
+            screen.getByTestId('ingredients-refresh-control').props.refreshing,
+        ).toBe(true);
     });
 
     it('shows an error state when ingredients cannot be loaded', async () => {

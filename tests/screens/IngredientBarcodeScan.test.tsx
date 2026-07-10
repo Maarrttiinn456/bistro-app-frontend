@@ -26,6 +26,7 @@ const mockInvalidateQueries = jest.fn();
 const mockSetQueryData = jest.fn();
 const mockRequestPermission = jest.fn();
 let mockSearchParams: Record<string, string | undefined> = {};
+let mockPathname = '/ingredients/scan';
 let mockCameraPermission = {
     canAskAgain: false,
     granted: true,
@@ -33,6 +34,7 @@ let mockCameraPermission = {
 
 jest.mock('expo-router', () => ({
     useLocalSearchParams: () => mockSearchParams,
+    usePathname: () => mockPathname,
     useRouter: () => ({
         back: mockBack,
         push: mockPush,
@@ -120,6 +122,7 @@ describe('IngredientBarcodeScanScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockSearchParams = {};
+        mockPathname = '/ingredients/scan';
         mockCameraPermission = {
             canAskAgain: false,
             granted: true,

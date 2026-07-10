@@ -1,4 +1,4 @@
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -13,7 +13,7 @@ const RecipeEditScreen = () => {
     const recipeId = normalizeRecipeId(recipeIdParam);
 
     return (
-        <Screen>
+        <Screen contentStyle={screenContentStyles.plain}>
             <View style={styles.content}>
                 <Text style={styles.title}>Upravit recept</Text>
                 <Text style={styles.text}>

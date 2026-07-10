@@ -20,6 +20,33 @@ const RecipesLayout = () => {
                 name="create"
                 options={{ title: 'Nový recept' }}
             />
+            <Stack.Screen
+                name="ingredient-picker"
+                options={{
+                    presentation: 'formSheet',
+                    title: 'Přidat surovinu',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
+                }}
+            />
+            <Stack.Screen
+                name="ingredient-create"
+                options={{
+                    presentation: 'formSheet',
+                    title: 'Nová surovina',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
+                }}
+            />
+            <Stack.Screen
+                name="ingredient-scan"
+                options={{
+                    presentation: 'formSheet',
+                    title: 'Skenovat kód',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
+                }}
+            />
             <Stack.Screen name="[recipeId]" options={{ title: 'Recept' }} />
             <Stack.Screen
                 name="[recipeId]/edit"

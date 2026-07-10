@@ -1,6 +1,6 @@
 import { type Macro } from '@/src/api/generated/model';
 import { useGetRecipe } from '@/src/api/generated/recipes/recipes';
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { RecipeDetailActionMenu } from '@/src/recipes/RecipeDetailActionMenu';
 import {
     formatIngredientAmount,
@@ -36,7 +36,7 @@ const RecipeDetailScreen = () => {
 
     if (isLoading) {
         return (
-            <Screen>
+            <Screen contentStyle={screenContentStyles.plain}>
                 <View style={styles.stateContainer}>
                     <ActivityIndicator
                         accessibilityLabel="Načítám detail receptu"
@@ -52,7 +52,7 @@ const RecipeDetailScreen = () => {
 
     if (isError || data?.recipe === undefined) {
         return (
-            <Screen>
+            <Screen contentStyle={screenContentStyles.plain}>
                 <View style={styles.stateContainer}>
                     <Text style={styles.errorText}>
                         Recept se nepovedlo načíst.
@@ -72,7 +72,7 @@ const RecipeDetailScreen = () => {
     return (
         <Screen>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[screenContentStyles.scroll, styles.content]}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.hero}>

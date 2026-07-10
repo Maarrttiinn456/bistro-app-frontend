@@ -16,12 +16,20 @@ const IngredientsLayout = () => {
             }}
         >
             <Stack.Screen name="index" options={{ title: 'Ingredience' }} />
-            <Stack.Screen name="create" options={{ title: 'Nová surovina' }} />
+            <Stack.Screen
+                name="create"
+                options={{
+                    presentation: 'formSheet',
+                    title: 'Nová surovina',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
+                }}
+            />
             <Stack.Screen
                 name="scan"
                 options={{
                     presentation: 'formSheet',
-                    title: 'Skenovat kod',
+                    title: 'Skenovat kód',
                     sheetAllowedDetents: [0.9],
                     sheetCornerRadius: 16,
                 }}

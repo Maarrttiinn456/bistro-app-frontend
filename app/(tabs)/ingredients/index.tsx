@@ -2,7 +2,7 @@ import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import type { Ingredient } from '@/src/api/generated/model';
 import { GetIngredientsScope } from '@/src/api/generated/model';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { formatIngredientNutritionPer100 } from '@/src/ingredients/ingredientFormatters';
 import { useRouter } from 'expo-router';
 import {
@@ -58,12 +58,16 @@ const Ingredients = () => {
     };
 
     const ingredients = data?.ingredients ?? [];
+    const isRefreshing = isFetching && !isLoading;
 
     const renderEmptyState = () => {
         if (isLoading) {
             return (
                 <View style={styles.stateContainer}>
-                    <ActivityIndicator accessibilityLabel="Načítám ingredience" />
+                    <ActivityIndicator
+                        accessibilityLabel="Načítám ingredience"
+                        testID="ingredients-loading-indicator"
+                    />
                     <Text style={styles.stateText}>
                         Načítám ingredience...
                     </Text>
@@ -93,13 +97,14 @@ const Ingredients = () => {
     return (
         <Screen>
             <FlatList
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={screenContentStyles.list}
                 data={ingredients}
                 keyExtractor={(ingredient) => ingredient.id}
                 ListEmptyComponent={renderEmptyState}
                 refreshControl={
                     <RefreshControl
-                        refreshing={isFetching}
+                        refreshing={isRefreshing}
+                        testID="ingredients-refresh-control"
                         onRefresh={refetch}
                     />
                 }
@@ -115,22 +120,24 @@ const Ingredients = () => {
                     />
                 )}
             />
-            <FloatingActionMenu
-                accessibilityLabel="Přidat ingredienci"
-                closedIcon="plus"
-                items={[
-                    {
-                        icon: 'pencil-plus',
-                        label: 'Přidat ručně',
-                        onPress: handleCreateIngredientPress,
-                    },
-                    {
-                        icon: 'barcode-scan',
-                        label: 'Naskenovat kód',
-                        onPress: handleScanIngredientPress,
-                    },
-                ]}
-            />
+            {isLoading ? null : (
+                <FloatingActionMenu
+                    accessibilityLabel="Přidat ingredienci"
+                    closedIcon="plus"
+                    items={[
+                        {
+                            icon: 'pencil-plus',
+                            label: 'Přidat ručně',
+                            onPress: handleCreateIngredientPress,
+                        },
+                        {
+                            icon: 'barcode-scan',
+                            label: 'Naskenovat kód',
+                            onPress: handleScanIngredientPress,
+                        },
+                    ]}
+                />
+            )}
         </Screen>
     );
 };
@@ -159,14 +166,6 @@ const styles = StyleSheet.create({
     ingredientNutrition: {
         color: '#475467',
         fontSize: 14,
-    },
-    listContent: {
-        backgroundColor: '#fff',
-        flexGrow: 1,
-        gap: 12,
-        paddingBottom: 96,
-        paddingHorizontal: 16,
-        paddingTop: 24,
     },
     stateContainer: {
         alignItems: 'center',

@@ -1,45 +1,22 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { Ingredient } from '@/src/api/generated/model';
 import { CreateRecipeIngredientRow } from '@/src/recipes/CreateRecipeIngredientRow';
 import type { RecipeIngredientRow } from '@/src/recipes/createRecipeForm';
 
 type CreateRecipeIngredientsSectionProps = {
-    activeRowId: string | null;
-    isSearchError: boolean;
-    isSearching: boolean;
     rows: RecipeIngredientRow[];
-    searchedIngredients: Ingredient[];
-    shouldShowResults: boolean;
     onAdd: () => void;
-    onCreateIngredient: (row: RecipeIngredientRow) => void;
-    onFocus: (rowId: string) => void;
     onRemove: (rowId: string) => void;
-    onScan: (row: RecipeIngredientRow) => void;
-    onSearchChange: (rowId: string, value: string) => void;
-    onSelect: (rowId: string, ingredient: Ingredient) => void;
     onToggleDisplayAmount: (rowId: string) => void;
-    onToggleMode: (row: RecipeIngredientRow) => void;
     onUpdate: (rowId: string, updates: Partial<RecipeIngredientRow>) => void;
 };
 
 export const CreateRecipeIngredientsSection = ({
-    activeRowId,
-    isSearchError,
-    isSearching,
     onAdd,
-    onCreateIngredient,
-    onFocus,
     onRemove,
-    onScan,
-    onSearchChange,
-    onSelect,
     onToggleDisplayAmount,
-    onToggleMode,
     onUpdate,
     rows,
-    searchedIngredients,
-    shouldShowResults,
 }: CreateRecipeIngredientsSectionProps) => {
     return (
         <View style={styles.section}>
@@ -55,25 +32,22 @@ export const CreateRecipeIngredientsSection = ({
                     </Text>
                 </Pressable>
             </View>
+
+            {rows.length === 0 ? (
+                <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>
+                        Zatím tu není žádná surovina.
+                    </Text>
+                </View>
+            ) : null}
+
             {rows.map((row, index) => (
                 <CreateRecipeIngredientRow
                     key={row.id}
-                    canRemove={rows.length > 1}
                     index={index}
-                    isActive={row.id === activeRowId}
-                    isSearchError={isSearchError}
-                    isSearching={isSearching}
                     row={row}
-                    searchedIngredients={searchedIngredients}
-                    shouldShowResults={shouldShowResults}
-                    onCreateIngredient={onCreateIngredient}
-                    onFocus={onFocus}
                     onRemove={onRemove}
-                    onScan={onScan}
-                    onSearchChange={onSearchChange}
-                    onSelect={onSelect}
                     onToggleDisplayAmount={onToggleDisplayAmount}
-                    onToggleMode={onToggleMode}
                     onUpdate={onUpdate}
                 />
             ))}
@@ -82,6 +56,19 @@ export const CreateRecipeIngredientsSection = ({
 };
 
 const styles = StyleSheet.create({
+    emptyBox: {
+        backgroundColor: '#f9fafb',
+        borderColor: '#eaecf0',
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 14,
+    },
+    emptyText: {
+        color: '#667085',
+        fontSize: 14,
+        lineHeight: 20,
+    },
     secondaryButton: {
         alignItems: 'center',
         borderColor: '#111827',
@@ -95,7 +82,7 @@ const styles = StyleSheet.create({
     secondaryButtonText: {
         color: '#111827',
         fontSize: 14,
-        fontWeight: '700',
+        fontWeight: '800',
     },
     section: {
         gap: 12,
@@ -109,6 +96,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         color: '#111827',
         fontSize: 18,
-        fontWeight: '800',
+        fontWeight: '900',
     },
 });

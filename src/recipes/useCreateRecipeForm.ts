@@ -2,11 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 
-import {
-    getGetIngredientsQueryKey,
-    useGetIngredients,
-} from '@/src/api/generated/ingredients/ingredients';
-import { GetIngredientsScope, type Ingredient, type MealSlot } from '@/src/api/generated/model';
+import { getGetIngredientsQueryKey } from '@/src/api/generated/ingredients/ingredients';
+import type { Ingredient, MealSlot } from '@/src/api/generated/model';
 import {
     getGetRecipesQueryKey,
     useCreateRecipe,
@@ -15,19 +12,18 @@ import { consumeCreatedIngredientHandoff } from '@/src/ingredients/createIngredi
 import {
     buildCreateRecipeBody,
     calculateMacroTotals,
-    createEmptyIngredientRow,
+    createIngredientRowId,
+    createSelectedIngredientRow,
     type RecipeIngredientRow,
 } from '@/src/recipes/createRecipeForm';
 
 type UseCreateRecipeFormParams = {
-    onCreateIngredient: (params: { name: string; rowId: string }) => void;
-    onScanIngredient: (params: { rowId: string }) => void;
+    onPickIngredient: (params: { rowId: string }) => void;
     onRecipeCreated: (recipeId: string) => void;
 };
 
 export const useCreateRecipeForm = ({
-    onCreateIngredient,
-    onScanIngredient,
+    onPickIngredient,
     onRecipeCreated,
 }: UseCreateRecipeFormParams) => {
     const queryClient = useQueryClient();
@@ -40,33 +36,9 @@ export const useCreateRecipeForm = ({
     const [sourceUrl, setSourceUrl] = useState('');
     const [ingredientRows, setIngredientRows] = useState<
         RecipeIngredientRow[]
-    >([createEmptyIngredientRow()]);
-    const [activeIngredientRowId, setActiveIngredientRowId] = useState<
-        string | null
-    >(null);
+    >([]);
     const [isOptionalDetailsOpen, setIsOptionalDetailsOpen] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
-
-    const activeIngredientRow = ingredientRows.find(
-        (ingredientRow) => ingredientRow.id === activeIngredientRowId,
-    );
-    const activeSearchQuery =
-        activeIngredientRow?.mode === 'catalog'
-            ? activeIngredientRow.searchText.trim()
-            : '';
-    const shouldSearchIngredients = activeSearchQuery.length > 0;
-
-    const ingredientsQuery = useGetIngredients(
-        {
-            query: activeSearchQuery,
-            scope: GetIngredientsScope.all,
-        },
-        {
-            query: {
-                enabled: shouldSearchIngredients,
-            },
-        },
-    );
     const createRecipeMutation = useCreateRecipe();
     const macroTotals = useMemo(
         () => calculateMacroTotals(ingredientRows),
@@ -88,15 +60,25 @@ export const useCreateRecipeForm = ({
 
     const handleIngredientSelect = useCallback(
         (rowId: string, selectedIngredient: Ingredient) => {
-            updateIngredientRow(rowId, {
-                displayName: selectedIngredient.name,
-                ingredientId: selectedIngredient.id,
-                mode: 'catalog',
-                searchText: selectedIngredient.name,
-                selectedIngredient,
+            setIngredientRows((currentIngredientRows) => {
+                const selectedRow = createSelectedIngredientRow(
+                    selectedIngredient,
+                    rowId,
+                );
+                const hasExistingRow = currentIngredientRows.some(
+                    (ingredientRow) => ingredientRow.id === rowId,
+                );
+
+                if (!hasExistingRow) {
+                    return [...currentIngredientRows, selectedRow];
+                }
+
+                return currentIngredientRows.map((ingredientRow) =>
+                    ingredientRow.id === rowId ? selectedRow : ingredientRow,
+                );
             });
         },
-        [updateIngredientRow],
+        [],
     );
 
     useFocusEffect(
@@ -119,16 +101,6 @@ export const useCreateRecipeForm = ({
         );
     };
 
-    const handleIngredientSearchChange = (rowId: string, value: string) => {
-        setActiveIngredientRowId(rowId);
-        updateIngredientRow(rowId, {
-            displayName: '',
-            ingredientId: null,
-            searchText: value,
-            selectedIngredient: null,
-        });
-    };
-
     const handleIngredientModeToggle = (row: RecipeIngredientRow) => {
         const nextMode = row.mode === 'catalog' ? 'freeText' : 'catalog';
 
@@ -141,22 +113,15 @@ export const useCreateRecipeForm = ({
     };
 
     const handleAddIngredientRow = () => {
-        setIngredientRows((currentIngredientRows) => [
-            ...currentIngredientRows,
-            createEmptyIngredientRow(),
-        ]);
+        onPickIngredient({ rowId: createIngredientRowId() });
     };
 
     const handleRemoveIngredientRow = (rowId: string) => {
-        setIngredientRows((currentIngredientRows) => {
-            if (currentIngredientRows.length === 1) {
-                return currentIngredientRows;
-            }
-
-            return currentIngredientRows.filter(
+        setIngredientRows((currentIngredientRows) =>
+            currentIngredientRows.filter(
                 (ingredientRow) => ingredientRow.id !== rowId,
-            );
-        });
+            ),
+        );
     };
 
     const handleToggleDisplayAmount = (rowId: string) => {
@@ -171,18 +136,6 @@ export const useCreateRecipeForm = ({
         updateIngredientRow(rowId, {
             showDisplayAmount: !row.showDisplayAmount,
         });
-    };
-
-    const handleCreateIngredient = (row: RecipeIngredientRow) => {
-        onCreateIngredient({
-            name: row.searchText.trim() || row.displayName.trim(),
-            rowId: row.id,
-        });
-    };
-
-    const handleScanIngredient = (row: RecipeIngredientRow) => {
-        setActiveIngredientRowId(row.id);
-        onScanIngredient({ rowId: row.id });
     };
 
     const handleSubmit = async () => {
@@ -221,41 +174,26 @@ export const useCreateRecipeForm = ({
         }
     };
 
-    const searchedIngredients = ingredientsQuery.data?.ingredients ?? [];
-    const shouldShowIngredientResults =
-        activeIngredientRow !== undefined &&
-        activeIngredientRow.mode === 'catalog' &&
-        shouldSearchIngredients &&
-        activeIngredientRow.ingredientId === null;
-
     return {
-        activeIngredientRowId,
         createRecipeMutation,
         image,
         ingredientRows,
-        ingredientsQuery,
         isOptionalDetailsOpen,
         macroTotals,
         mealTypes,
         name,
         portions,
         prepTimeMin,
-        searchedIngredients,
-        shouldShowIngredientResults,
         sourceUrl,
         steps,
         validationError,
         handleAddIngredientRow,
-        handleCreateIngredient,
         handleIngredientModeToggle,
-        handleIngredientSearchChange,
         handleIngredientSelect,
         handleMealTypePress,
         handleRemoveIngredientRow,
-        handleScanIngredient,
         handleSubmit,
         handleToggleDisplayAmount,
-        setActiveIngredientRowId,
         setImage,
         setIsOptionalDetailsOpen,
         setName,

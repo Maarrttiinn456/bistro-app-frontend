@@ -1,5 +1,5 @@
 import { CameraView } from 'expo-camera';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, usePathname } from 'expo-router';
 import {
     ActivityIndicator,
     Pressable,
@@ -9,9 +9,9 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { ResolveIngredientBarcodeResponse } from '@/src/api/generated/model';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { getIngredientBarcodeSourceLabel } from '@/src/ingredients/ingredientBarcodeScan';
 import { formatIngredientNutritionPer100 } from '@/src/ingredients/ingredientFormatters';
 import { useIngredientBarcodeScan } from '@/src/ingredients/useIngredientBarcodeScan';
@@ -60,8 +60,12 @@ const IngredientBarcodeScanScreen = () => {
     const params = useLocalSearchParams<{
         rowId?: string | string[];
     }>();
+    const pathname = usePathname();
     const rowId = normalizeParam(params.rowId);
-    const scan = useIngredientBarcodeScan({ rowId });
+    const createPathname = pathname.startsWith('/recipes')
+        ? '/recipes/ingredient-create'
+        : '/ingredients/create';
+    const scan = useIngredientBarcodeScan({ createPathname, rowId });
     const { height } = useWindowDimensions();
     const hasResult = Boolean(scan.result);
     const hasError = Boolean(scan.errorMessage);
@@ -78,9 +82,11 @@ const IngredientBarcodeScanScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.content}>
-                <View style={styles.header}>
+        <Screen
+            contentStyle={[screenContentStyles.plain, styles.content]}
+            edges={['top', 'bottom', 'left', 'right']}
+        >
+            <View style={styles.header}>
                     <Text style={styles.title}>Skenovat kód</Text>
                     <Pressable
                         accessibilityRole="button"
@@ -89,9 +95,9 @@ const IngredientBarcodeScanScreen = () => {
                     >
                         <Text style={styles.closeButtonText}>Zavřít</Text>
                     </Pressable>
-                </View>
+            </View>
 
-                <View style={[styles.cameraFrame, { height: cameraHeight }]}>
+            <View style={[styles.cameraFrame, { height: cameraHeight }]}>
                     {scan.isCameraActive ? (
                         <CameraView
                             barcodeScannerSettings={{
@@ -121,9 +127,9 @@ const IngredientBarcodeScanScreen = () => {
                             )}
                         </View>
                     )}
-                </View>
+            </View>
 
-                {showPermissionHint ? (
+            {showPermissionHint ? (
                     <View style={styles.infoBox}>
                         <Text style={styles.infoText}>
                             Pro skenování povol kameru, nebo zadej kód ručně.
@@ -138,9 +144,9 @@ const IngredientBarcodeScanScreen = () => {
                             </Text>
                         </Pressable>
                     </View>
-                ) : null}
+            ) : null}
 
-                {showManualEntry ? (
+            {showManualEntry ? (
                     <View style={styles.manualBox}>
                         <Text style={styles.sectionTitle}>Ruční zadání</Text>
                         <TextInput
@@ -167,16 +173,16 @@ const IngredientBarcodeScanScreen = () => {
                             </Text>
                         </Pressable>
                     </View>
-                ) : null}
+            ) : null}
 
-                {scan.result ? (
+            {scan.result ? (
                     <IngredientResult
                         response={scan.result}
                         onConfirm={() => void scan.handleConfirm()}
                     />
-                ) : null}
+            ) : null}
 
-                {scan.errorMessage ? (
+            {scan.errorMessage ? (
                     <View style={styles.errorBox}>
                         <Text style={styles.errorText} selectable>
                             {scan.errorMessage}
@@ -210,17 +216,16 @@ const IngredientBarcodeScanScreen = () => {
                             </Pressable>
                         ) : null}
                     </View>
-                ) : null}
+            ) : null}
 
-                <Pressable
-                    accessibilityRole="button"
-                    style={styles.textButton}
-                    onPress={scan.resetScan}
-                >
-                    <Text style={styles.textButtonText}>Skenovat znovu</Text>
-                </Pressable>
-            </View>
-        </SafeAreaView>
+            <Pressable
+                accessibilityRole="button"
+                style={styles.textButton}
+                onPress={scan.resetScan}
+            >
+                <Text style={styles.textButtonText}>Skenovat znovu</Text>
+            </Pressable>
+        </Screen>
     );
 };
 
@@ -256,14 +261,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
     },
-    container: {
-        backgroundColor: '#ffffff',
-        flex: 1,
-    },
     content: {
         flex: 1,
         gap: 16,
-        padding: 16,
     },
     disabledButton: {
         opacity: 0.5,

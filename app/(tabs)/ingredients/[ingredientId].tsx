@@ -1,4 +1,4 @@
-import { Screen } from '@/src/components/Screen';
+import { Screen, screenContentStyles } from '@/src/components/Screen';
 import { IngredientDetailActionMenu } from '@/src/ingredients/IngredientDetailActionMenu';
 import {
     formatIngredientMacroValue,
@@ -29,7 +29,7 @@ const IngredientDetailScreen = () => {
 
     if (isLoading) {
         return (
-            <Screen>
+            <Screen contentStyle={screenContentStyles.plain}>
                 <View style={styles.stateContainer}>
                     <ActivityIndicator
                         accessibilityLabel="Načítám detail ingredience"
@@ -45,7 +45,7 @@ const IngredientDetailScreen = () => {
 
     if (isError || ingredient === undefined) {
         return (
-            <Screen>
+            <Screen contentStyle={screenContentStyles.plain}>
                 <View style={styles.stateContainer}>
                     <Text style={styles.errorText}>
                         Ingredience se nepovedlo načíst.
@@ -58,7 +58,7 @@ const IngredientDetailScreen = () => {
     return (
         <Screen>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[screenContentStyles.scroll, styles.content]}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.hero}>

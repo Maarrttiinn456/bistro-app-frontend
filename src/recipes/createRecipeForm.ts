@@ -56,17 +56,31 @@ export const mealTypeOptions: { value: MealSlot; label: string }[] = [
     { value: MealSlot.snack, label: 'Svačina' },
 ];
 
+export const createIngredientRowId = () => `${Date.now()}-${Math.random()}`;
+
 export const createEmptyIngredientRow = (): RecipeIngredientRow => ({
     amountG: '',
     displayAmount: '',
     displayName: '',
     displayUnit: '',
-    id: `${Date.now()}-${Math.random()}`,
+    id: createIngredientRowId(),
     ingredientId: null,
     mode: 'catalog',
     searchText: '',
     selectedIngredient: null,
     showDisplayAmount: false,
+});
+
+export const createSelectedIngredientRow = (
+    ingredient: Ingredient,
+    rowId = createIngredientRowId(),
+): RecipeIngredientRow => ({
+    ...createEmptyIngredientRow(),
+    displayName: ingredient.name,
+    id: rowId,
+    ingredientId: ingredient.id,
+    searchText: ingredient.name,
+    selectedIngredient: ingredient,
 });
 
 export const parseFormNumber = (value: string) => {

@@ -19,10 +19,12 @@ Pravidla pro spolupraci s agentem v tomhle projektu.
 - U vetsich zmen nejdriv napis kratky plan.
 - Nemen architekturu bez potvrzeni.
 - Nezakladej slozky dopredu jen proto, ze by se jednou mohly hodit.
+- Pri reseni startu aplikace, Expo Go, prihlaseni nebo dostupnosti API z mobilu vzdy zkontroluj aktualni IPv4 adresu stroje a hodnotu `EXPO_PUBLIC_API_URL` v `.env.local`. Pokud nesedi, upozorni uzivatele a uprav ji jen v ramci explicitniho zadani.
 
 ## Potvrzeni
 
 - Nevratne akce, napr. delete, force push, send nebo publish, vyzaduji explicitni potvrzeni.
+- Kazde mazani nebo odebrani polozky v UI musi pred provedenim zobrazit potvrzeni.
 - Externi komunikaci pripravuj jen jako draft k review, nikdy ji neposilej automaticky.
 
 ## Testovani
