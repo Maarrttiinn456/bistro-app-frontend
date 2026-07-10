@@ -112,15 +112,12 @@ const LoginScreen = () => {
                 </Pressable>
             )}
 
-            <Text>
-                Nemáš účet?{' '}
-                <Text
-                    style={{ color: '#111827', fontWeight: '600' }}
-                    onPress={() => router.push('/register')}
-                >
-                    Registrovat se
-                </Text>
-            </Text>
+            <View style={styles.footer}>
+                <Text>Nemáš účet?</Text>
+                <Pressable hitSlop={4} onPress={() => router.push('/register')}>
+                    <Text style={styles.footerLink}>Registrovat se</Text>
+                </Pressable>
+            </View>
         </View>
     );
 };
@@ -178,6 +175,15 @@ const styles = StyleSheet.create({
     secondaryButtonText: {
         color: '#111827',
         fontSize: 16,
+        fontWeight: '600',
+    },
+    footer: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 4,
+    },
+    footerLink: {
+        color: '#111827',
         fontWeight: '600',
     },
 });

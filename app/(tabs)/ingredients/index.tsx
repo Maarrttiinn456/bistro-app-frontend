@@ -1,6 +1,6 @@
+import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import type { Ingredient } from '@/src/api/generated/model';
 import { GetIngredientsScope } from '@/src/api/generated/model';
-import { useGetIngredients } from '@/src/api/generated/ingredients/ingredients';
 import { FloatingActionMenu } from '@/src/components/FloatingActionMenu';
 import { Screen } from '@/src/components/Screen';
 import { formatIngredientNutritionPer100 } from '@/src/ingredients/ingredientFormatters';
@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     FlatList,
     Pressable,
+    RefreshControl,
     StyleSheet,
     Text,
     View,
@@ -44,7 +45,7 @@ const IngredientListItem = ({
 
 const Ingredients = () => {
     const router = useRouter();
-    const { data, isError, isLoading } = useGetIngredients({
+    const { data, isError, isFetching, isLoading, refetch } = useGetIngredients({
         scope: GetIngredientsScope.all,
     });
 
@@ -56,35 +57,38 @@ const Ingredients = () => {
         router.push('/ingredients/scan');
     };
 
-    if (isLoading) {
-        return (
-            <Screen>
+    const ingredients = data?.ingredients ?? [];
+
+    const renderEmptyState = () => {
+        if (isLoading) {
+            return (
                 <View style={styles.stateContainer}>
-                    <ActivityIndicator
-                        accessibilityLabel="Načítám ingredience"
-                        testID="ingredients-loading-indicator"
-                    />
+                    <ActivityIndicator accessibilityLabel="Načítám ingredience" />
                     <Text style={styles.stateText}>
                         Načítám ingredience...
                     </Text>
                 </View>
-            </Screen>
-        );
-    }
+            );
+        }
 
-    if (isError) {
-        return (
-            <Screen>
+        if (isError) {
+            return (
                 <View style={styles.stateContainer}>
-                    <Text style={styles.errorText}>
+                    <Text style={styles.stateText}>
                         Ingredience se nepovedlo načíst.
                     </Text>
                 </View>
-            </Screen>
-        );
-    }
+            );
+        }
 
-    const ingredients = data?.ingredients ?? [];
+        return (
+            <View style={styles.stateContainer}>
+                <Text style={styles.stateText}>
+                    Zatím nejsou žádné ingredience.
+                </Text>
+            </View>
+        );
+    };
 
     return (
         <Screen>
@@ -92,10 +96,12 @@ const Ingredients = () => {
                 contentContainerStyle={styles.listContent}
                 data={ingredients}
                 keyExtractor={(ingredient) => ingredient.id}
-                ListEmptyComponent={
-                    <Text style={styles.stateText}>
-                        Zatím nejsou žádné ingredience.
-                    </Text>
+                ListEmptyComponent={renderEmptyState}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isFetching}
+                        onRefresh={refetch}
+                    />
                 }
                 renderItem={({ item }) => (
                     <IngredientListItem
@@ -108,7 +114,6 @@ const Ingredients = () => {
                         }}
                     />
                 )}
-                showsVerticalScrollIndicator={false}
             />
             <FloatingActionMenu
                 accessibilityLabel="Přidat ingredienci"
@@ -131,10 +136,6 @@ const Ingredients = () => {
 };
 
 const styles = StyleSheet.create({
-    errorText: {
-        color: '#b42318',
-        fontSize: 15,
-    },
     ingredientBrand: {
         color: '#667085',
         fontSize: 14,
@@ -160,8 +161,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     listContent: {
+        backgroundColor: '#fff',
+        flexGrow: 1,
         gap: 12,
         paddingBottom: 96,
+        paddingHorizontal: 16,
+        paddingTop: 24,
     },
     stateContainer: {
         alignItems: 'center',

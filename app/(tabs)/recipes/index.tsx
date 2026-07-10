@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     FlatList,
     Pressable,
+    RefreshControl,
     StyleSheet,
     Text,
     View,
@@ -39,7 +40,7 @@ const RecipeListItem = ({
 
 const Recipes = () => {
     const router = useRouter();
-    const { data, isError, isLoading } = useGetRecipes();
+    const { data, isError, isFetching, isLoading, refetch } = useGetRecipes();
 
     const handleRecipePress = (recipeId: string) => {
         router.push({
@@ -48,33 +49,36 @@ const Recipes = () => {
         });
     };
 
-    if (isLoading) {
-        return (
-            <Screen>
+    const recipes = data?.recipes ?? [];
+
+    const renderEmptyState = () => {
+        if (isLoading) {
+            return (
                 <View style={styles.stateContainer}>
-                    <ActivityIndicator
-                        accessibilityLabel="Načítám recepty"
-                        testID="recipes-loading-indicator"
-                    />
+                    <ActivityIndicator accessibilityLabel="Načítám recepty" />
                     <Text style={styles.stateText}>Načítám recepty...</Text>
                 </View>
-            </Screen>
-        );
-    }
+            );
+        }
 
-    if (isError) {
-        return (
-            <Screen>
+        if (isError) {
+            return (
                 <View style={styles.stateContainer}>
-                    <Text style={styles.errorText}>
+                    <Text style={styles.stateText}>
                         Recepty se nepovedlo načíst.
                     </Text>
                 </View>
-            </Screen>
-        );
-    }
+            );
+        }
 
-    const recipes = data?.recipes ?? [];
+        return (
+            <View style={styles.stateContainer}>
+                <Text style={styles.stateText}>
+                    Zatím nemáš žádné recepty.
+                </Text>
+            </View>
+        );
+    };
 
     return (
         <Screen>
@@ -82,15 +86,16 @@ const Recipes = () => {
                 contentContainerStyle={styles.listContent}
                 data={recipes}
                 keyExtractor={(recipe) => recipe.id}
-                ListEmptyComponent={
-                    <Text style={styles.stateText}>
-                        Zatím nemáš žádné recepty.
-                    </Text>
+                ListEmptyComponent={renderEmptyState}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isFetching}
+                        onRefresh={refetch}
+                    />
                 }
                 renderItem={({ item }) => (
                     <RecipeListItem recipe={item} onPress={handleRecipePress} />
                 )}
-                showsVerticalScrollIndicator={false}
             />
             <RecipeAddActionMenu />
         </Screen>
@@ -98,13 +103,13 @@ const Recipes = () => {
 };
 
 const styles = StyleSheet.create({
-    errorText: {
-        color: '#b42318',
-        fontSize: 15,
-    },
     listContent: {
+        backgroundColor: '#fff',
+        flexGrow: 1,
         gap: 12,
         paddingBottom: 96,
+        paddingHorizontal: 16,
+        paddingTop: 24,
     },
     recipeItem: {
         borderColor: '#d0d5dd',

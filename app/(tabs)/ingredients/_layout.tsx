@@ -20,9 +20,10 @@ const IngredientsLayout = () => {
             <Stack.Screen
                 name="scan"
                 options={{
-                    headerShown: false,
-                    presentation: 'modal',
+                    presentation: 'formSheet',
                     title: 'Skenovat kod',
+                    sheetAllowedDetents: [0.9],
+                    sheetCornerRadius: 16,
                 }}
             />
             <Stack.Screen

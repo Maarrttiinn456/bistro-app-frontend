@@ -3,10 +3,10 @@ import { useLocalSearchParams } from 'expo-router';
 import {
     ActivityIndicator,
     Pressable,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
+    useWindowDimensions,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,14 +31,18 @@ const IngredientResult = ({
 
     return (
         <View style={styles.resultBox}>
-            <Text style={styles.resultTitle}>{ingredient.name}</Text>
+            <Text numberOfLines={2} style={styles.resultTitle}>
+                {ingredient.name}
+            </Text>
             {ingredient.brand ? (
-                <Text style={styles.metaText}>{ingredient.brand}</Text>
+                <Text numberOfLines={1} style={styles.metaText}>
+                    {ingredient.brand}
+                </Text>
             ) : null}
-            <Text style={styles.nutritionText}>
+            <Text numberOfLines={2} style={styles.nutritionText}>
                 {formatIngredientNutritionPer100(ingredient)}
             </Text>
-            <Text style={styles.sourceText}>
+            <Text numberOfLines={1} style={styles.sourceText}>
                 {getIngredientBarcodeSourceLabel(response.source)}
             </Text>
             <Pressable
@@ -58,14 +62,24 @@ const IngredientBarcodeScanScreen = () => {
     }>();
     const rowId = normalizeParam(params.rowId);
     const scan = useIngredientBarcodeScan({ rowId });
+    const { height } = useWindowDimensions();
+    const hasResult = Boolean(scan.result);
+    const hasError = Boolean(scan.errorMessage);
+    const showManualEntry = !hasResult && !hasError;
+    const showPermissionHint = showManualEntry && !scan.permission?.granted;
+    const cameraHeight = Math.round(
+        Math.max(
+            hasResult ? 104 : hasError ? 140 : 180,
+            Math.min(
+                height * (hasResult ? 0.14 : hasError ? 0.2 : 0.3),
+                hasResult ? 140 : hasError ? 180 : 300,
+            ),
+        ),
+    );
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.content}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.content}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Skenovat kód</Text>
                     <Pressable
@@ -77,7 +91,7 @@ const IngredientBarcodeScanScreen = () => {
                     </Pressable>
                 </View>
 
-                <View style={styles.cameraFrame}>
+                <View style={[styles.cameraFrame, { height: cameraHeight }]}>
                     {scan.isCameraActive ? (
                         <CameraView
                             barcodeScannerSettings={{
@@ -109,7 +123,7 @@ const IngredientBarcodeScanScreen = () => {
                     )}
                 </View>
 
-                {!scan.permission?.granted ? (
+                {showPermissionHint ? (
                     <View style={styles.infoBox}>
                         <Text style={styles.infoText}>
                             Pro skenování povol kameru, nebo zadej kód ručně.
@@ -126,30 +140,34 @@ const IngredientBarcodeScanScreen = () => {
                     </View>
                 ) : null}
 
-                <View style={styles.manualBox}>
-                    <Text style={styles.sectionTitle}>Ruční zadání</Text>
-                    <TextInput
-                        accessibilityLabel="EAN kód"
-                        keyboardType="number-pad"
-                        placeholder="Např. 3017620422003"
-                        style={styles.input}
-                        value={scan.manualBarcode}
-                        onChangeText={scan.setManualBarcode}
-                    />
-                    <Pressable
-                        accessibilityRole="button"
-                        disabled={scan.isResolving}
-                        style={[
-                            styles.secondaryButton,
-                            scan.isResolving ? styles.disabledButton : null,
-                        ]}
-                        onPress={scan.handleManualSubmit}
-                    >
-                        <Text style={styles.secondaryButtonText}>
-                            Ověřit kód
-                        </Text>
-                    </Pressable>
-                </View>
+                {showManualEntry ? (
+                    <View style={styles.manualBox}>
+                        <Text style={styles.sectionTitle}>Ruční zadání</Text>
+                        <TextInput
+                            accessibilityLabel="EAN kód"
+                            keyboardType="number-pad"
+                            placeholder="Např. 3017620422003"
+                            style={styles.input}
+                            value={scan.manualBarcode}
+                            onChangeText={scan.setManualBarcode}
+                        />
+                        <Pressable
+                            accessibilityRole="button"
+                            disabled={scan.isResolving}
+                            style={[
+                                styles.secondaryButton,
+                                scan.isResolving
+                                    ? styles.disabledButton
+                                    : null,
+                            ]}
+                            onPress={scan.handleManualSubmit}
+                        >
+                            <Text style={styles.secondaryButtonText}>
+                                Ověřit kód
+                            </Text>
+                        </Pressable>
+                    </View>
+                ) : null}
 
                 {scan.result ? (
                     <IngredientResult
@@ -201,7 +219,7 @@ const IngredientBarcodeScanScreen = () => {
                 >
                     <Text style={styles.textButtonText}>Skenovat znovu</Text>
                 </Pressable>
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 };
@@ -213,7 +231,6 @@ const styles = StyleSheet.create({
     cameraFrame: {
         backgroundColor: '#111827',
         borderRadius: 8,
-        height: 280,
         overflow: 'hidden',
     },
     cameraPlaceholder: {
@@ -244,9 +261,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
+        flex: 1,
         gap: 16,
         padding: 16,
-        paddingBottom: 32,
     },
     disabledButton: {
         opacity: 0.5,
@@ -323,6 +340,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         gap: 8,
         padding: 12,
+        flexShrink: 1,
     },
     resultTitle: {
         color: '#111827',

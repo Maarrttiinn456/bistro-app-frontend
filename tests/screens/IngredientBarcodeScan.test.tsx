@@ -157,6 +157,9 @@ describe('IngredientBarcodeScanScreen', () => {
         expect(screen.getByText('Ferrero')).toBeOnTheScreen();
         expect(screen.getByText(/Na 100 g: 539 kcal/)).toBeOnTheScreen();
         expect(screen.getByText(/Open Food Facts/)).toBeOnTheScreen();
+        expect(
+            screen.getByRole('button', { name: /Použít surovinu/ }),
+        ).toBeOnTheScreen();
     });
 
     it('stores handoff when confirmed from recipe flow', async () => {
